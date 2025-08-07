@@ -1,17 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { validateUser } from "@/lib/MongoDB";
 import { serialize } from "cookie";
 import { connectToDatabase } from "@/lib/MongoDB";
+import { validateUser } from "@/lib/MongoDB"; // for password login
+import base64url from "base64url";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { Email, Password } = req.body;
+  const { Email, Password, credentialId } = req.body;
 
-  if (!Email || !Password) {
-    return res.status(400).json({ message: "Email and Password are required." });
+  if (!Email) {
+    return res.status(400).json({ message: "Email is required." });
   }
 
   const db = await connectToDatabase();
@@ -24,20 +25,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ message: "Invalid credentials." });
   }
 
-  // Validate user credentials
-  const result = await validateUser({ Email, Password });
+  // --- WebAuthn (Fingerprint) Login ---
+  if (credentialId && !Password) {
+    // This assumes you're storing WebAuthn credential ID under user.credentials
+    const storedCredId = user?.credentials?.[0]?.id;
 
-  if (!result.success || !result.user) {
-    return res.status(401).json({
-      message: "Invalid credentials.",
+    if (!storedCredId) {
+      return res.status(400).json({ message: "No WebAuthn credential found for this user." });
+    }
+
+    if (storedCredId !== credentialId) {
+      return res.status(401).json({ message: "Invalid fingerprint credential." });
+    }
+
+    // Fingerprint (WebAuthn) is valid, set cookie
+    const userId = user._id.toString();
+    res.setHeader(
+      "Set-Cookie",
+      serialize("session", userId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== "development",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 24, // 1 day
+        path: "/",
+      })
+    );
+
+    return res.status(200).json({
+      message: "Fingerprint login successful",
+      userId,
     });
   }
 
-  // Reset login attempts, status, and lockUntil are no longer needed here
+  // --- Password Login ---
+  if (!Password) {
+    return res.status(400).json({ message: "Password is required for normal login." });
+  }
+
+  const result = await validateUser({ Email, Password });
+
+  if (!result.success || !result.user) {
+    return res.status(401).json({ message: "Invalid credentials." });
+  }
 
   const userId = result.user._id.toString();
 
-  // Set a session cookie
   res.setHeader(
     "Set-Cookie",
     serialize("session", userId, {
