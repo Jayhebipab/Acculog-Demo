@@ -72,7 +72,7 @@ const ProfileForm: React.FC = () => {
     try {
       const publicKey: PublicKeyCredentialCreationOptions = {
         challenge: new Uint8Array(32), // Normally generated from server
-        rp: { name: "Linker X App" },
+        rp: { name: "Acculog" },
         user: {
           id: Uint8Array.from(userDetails.id, c => c.charCodeAt(0)),
           name: userDetails.Email,
