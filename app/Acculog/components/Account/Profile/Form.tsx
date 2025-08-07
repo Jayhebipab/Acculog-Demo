@@ -57,7 +57,10 @@ const ProfileForm: React.FC = () => {
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
   const isWebAuthnSupported = () => {
-    return window.PublicKeyCredential && typeof window.PublicKeyCredential === "function";
+    return (
+      window.PublicKeyCredential &&
+      typeof window.PublicKeyCredential === "function"
+    );
   };
 
   const handleRegisterFingerprint = async () => {
@@ -68,7 +71,7 @@ const ProfileForm: React.FC = () => {
 
     try {
       const publicKey: PublicKeyCredentialCreationOptions = {
-        challenge: new Uint8Array(32),
+        challenge: new Uint8Array(32), // Ideally, get this from your backend
         rp: { name: "Acculog" },
         user: {
           id: Uint8Array.from(userDetails.id, c => c.charCodeAt(0)),
@@ -89,7 +92,10 @@ const ProfileForm: React.FC = () => {
         const rawId = credential.rawId;
         const rawIdBase64 = btoa(String.fromCharCode(...new Uint8Array(rawId)));
 
+        // Save both credential ID and email to localStorage
         localStorage.setItem("credentialId", rawIdBase64);
+        localStorage.setItem("email", userDetails.Email);
+
         toast.success("Fingerprint registered successfully");
         setUserDetails(prev => ({ ...prev, Fingerprint: "Registered" }));
       }
@@ -98,6 +104,7 @@ const ProfileForm: React.FC = () => {
       toast.error("Fingerprint registration failed");
     }
   };
+
 
   const handleVerifyFingerprint = async () => {
     if (!isWebAuthnSupported()) {
@@ -138,7 +145,7 @@ const ProfileForm: React.FC = () => {
       toast.error("Fingerprint verification failed");
     }
   };
-  
+
   useEffect(() => {
     const fetchUserData = async () => {
       const params = new URLSearchParams(window.location.search);
