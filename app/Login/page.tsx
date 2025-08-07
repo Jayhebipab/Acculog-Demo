@@ -12,6 +12,12 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const isWebAuthnSupported = () => {
+    return typeof window !== 'undefined' &&
+      window.PublicKeyCredential &&
+      typeof window.PublicKeyCredential === "function";
+  };
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -57,30 +63,32 @@ const Login: React.FC = () => {
   );
 
   const handleVerifyFingerprint = async () => {
-    if (!window.PublicKeyCredential) {
+    if (!isWebAuthnSupported()) {
       toast.error("WebAuthn is not supported in this browser.");
       return;
     }
 
     const storedCredentialId = localStorage.getItem("credentialId");
+    const storedEmail = localStorage.getItem("email");
 
-    if (!storedCredentialId) {
-      toast.error("No fingerprint passkey registered yet.");
+    if (!storedCredentialId || !storedEmail) {
+      toast.error("No registered fingerprint or email found.");
       return;
     }
 
     try {
       const credentialRequestOptions: PublicKeyCredentialRequestOptions = {
-        challenge: new Uint8Array(32),
+        challenge: new Uint8Array(32), // Ideally from backend
         timeout: 60000,
         rpId: window.location.hostname,
+        userVerification: "preferred",
         allowCredentials: [
           {
             id: Uint8Array.from(atob(storedCredentialId), c => c.charCodeAt(0)),
             type: "public-key",
+            transports: ["internal"],
           },
         ],
-        userVerification: "preferred",
       };
 
       const assertion = await navigator.credentials.get({
@@ -88,8 +96,24 @@ const Login: React.FC = () => {
       }) as PublicKeyCredential;
 
       if (assertion) {
-        toast.success("Fingerprint verified successfully!");
-        router.push(`/Acculog/Attendance/Dashboard?id=fingerprint_user`);
+        // Send both email and credentialId to backend
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            Email: storedEmail,
+            credentialId: storedCredentialId,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.userId) {
+          toast.success("Fingerprint login successful!");
+          router.push(`/Acculog/Attendance/Dashboard?id=${encodeURIComponent(result.userId)}`);
+        } else {
+          toast.error(result.message || "Fingerprint login failed.");
+        }
       } else {
         toast.error("Fingerprint verification failed.");
       }
@@ -98,6 +122,7 @@ const Login: React.FC = () => {
       toast.error("Fingerprint login failed or cancelled.");
     }
   };
+
 
   return (
     <div
