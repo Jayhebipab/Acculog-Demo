@@ -56,6 +56,7 @@ const ProfileForm: React.FC = () => {
   const autosaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
+  // Check if WebAuthn is supported
   const isWebAuthnSupported = () => {
     return (
       window.PublicKeyCredential &&
@@ -63,6 +64,7 @@ const ProfileForm: React.FC = () => {
     );
   };
 
+  // REGISTER FINGERPRINT
   const handleRegisterFingerprint = async () => {
     if (!isWebAuthnSupported()) {
       toast.error("WebAuthn not supported on this browser.");
@@ -71,24 +73,31 @@ const ProfileForm: React.FC = () => {
 
     try {
       const publicKey: PublicKeyCredentialCreationOptions = {
-        challenge: new Uint8Array(32), // Normally generated from server
+        challenge: new Uint8Array(32), // In production, get this from backend
         rp: { name: "Acculog" },
         user: {
           id: Uint8Array.from(userDetails.id, c => c.charCodeAt(0)),
           name: userDetails.Email,
           displayName: `${userDetails.Firstname} ${userDetails.Lastname}`,
         },
-        pubKeyCredParams: [{ type: "public-key", alg: -7 }], // ES256
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
         authenticatorSelection: {
           authenticatorAttachment: "platform",
         },
         timeout: 60000,
-        attestation: "direct" as AttestationConveyancePreference, // ✅ FIXED HERE
+        attestation: "direct",
       };
 
-      const credential = await navigator.credentials.create({ publicKey });
+      const credential = await navigator.credentials.create({ publicKey }) as PublicKeyCredential;
 
-      if (credential) {
+      if (credential && credential.type === "public-key") {
+        const rawId = credential.rawId;
+        const rawIdBase64 = btoa(
+          String.fromCharCode(...new Uint8Array(rawId))
+        );
+
+        localStorage.setItem("credentialId", rawIdBase64);
+
         toast.success("Fingerprint registered successfully");
         setUserDetails(prev => ({ ...prev, Fingerprint: "Registered" }));
       }
@@ -98,6 +107,8 @@ const ProfileForm: React.FC = () => {
     }
   };
 
+
+  // VERIFY FINGERPRINT
   const handleVerifyFingerprint = async () => {
     if (!isWebAuthnSupported()) {
       toast.error("WebAuthn is not supported on this browser.");
@@ -105,21 +116,36 @@ const ProfileForm: React.FC = () => {
     }
 
     try {
+      const savedCredentialId = localStorage.getItem("credentialId");
+
+      if (!savedCredentialId) {
+        toast.error("No registered passkey found. Please register first.");
+        return;
+      }
+
+      const credentialIdBytes = Uint8Array.from(
+        atob(savedCredentialId),
+        c => c.charCodeAt(0)
+      );
+
       const publicKey: PublicKeyCredentialRequestOptions = {
-        challenge: new Uint8Array(32), // In real-world, generate this from the backend
+        challenge: new Uint8Array(32), // In production, generate on backend
         timeout: 60000,
-        userVerification: "preferred", // or "required"
-        // You can optionally filter allowed credentials if saved in DB
-        // allowCredentials: [{ type: "public-key", id: Uint8Array.from("credential-id") }]
+        userVerification: "preferred",
+        allowCredentials: [
+          {
+            type: "public-key",
+            id: credentialIdBytes,
+            transports: ["internal"],
+          },
+        ],
       };
 
-      const assertion = await navigator.credentials.get({
-        publicKey
-      });
+      const assertion = await navigator.credentials.get({ publicKey });
 
       if (assertion && assertion.type === "public-key") {
         toast.success("Fingerprint verified successfully");
-        // optionally handle the assertion.response here
+        // You may validate assertion.response here with your server
       } else {
         toast.error("Fingerprint verification failed");
       }
@@ -128,6 +154,7 @@ const ProfileForm: React.FC = () => {
       toast.error("Fingerprint verification failed");
     }
   };
+
 
   useEffect(() => {
     const fetchUserData = async () => {
