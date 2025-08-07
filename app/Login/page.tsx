@@ -156,13 +156,13 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        <button
+        {/*<button
           type="button"
           onClick={handleVerifyFingerprint}
           className="mt-2 w-full py-3 border border-cyan-500 text-cyan-500 font-semibold text-xs rounded-lg hover:bg-cyan-50 transition-all duration-300"
         >
           Sign In with Fingerprint
-        </button>
+        </button>*/}
         <p className="mt-4 text-xs text-center font-bold">Acculog - Attendance and Time Tracking System | IT Department</p>
       </div>
     </div>
