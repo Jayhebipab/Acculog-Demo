@@ -19,7 +19,8 @@ export default async function updateProfile(req: NextApiRequest, res: NextApiRes
     Status,
     ContactNumber,
     Password,
-    profilePicture, // bagong field dito
+    profilePicture,
+    Fingerprint, // ✅ Added Fingerprint field
   } = req.body;
 
   if (!id) {
@@ -42,7 +43,11 @@ export default async function updateProfile(req: NextApiRequest, res: NextApiRes
     };
 
     if (profilePicture) {
-      updatedUser.profilePicture = profilePicture; // i-save ang url dito
+      updatedUser.profilePicture = profilePicture;
+    }
+
+    if (Fingerprint) {
+      updatedUser.Fingerprint = Fingerprint; // ✅ Save fingerprint status
     }
 
     if (Password && Password.trim() !== "") {

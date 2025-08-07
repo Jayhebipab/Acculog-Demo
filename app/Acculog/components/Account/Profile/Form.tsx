@@ -20,6 +20,7 @@ interface UserDetails {
   ContactPassword?: string;
   ContactNumber: string;
   profilePicture: string;
+  Fingerprint: string;
 }
 
 const STATUS_OPTIONS = [
@@ -44,6 +45,7 @@ const ProfileForm: React.FC = () => {
     Department: "",
     Status: "",
     profilePicture: "",
+    Fingerprint: "",
   });
 
   const [originalDetails, setOriginalDetails] = useState<UserDetails | null>(null);
@@ -53,6 +55,79 @@ const ProfileForm: React.FC = () => {
   const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong" | "">("");
   const autosaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+
+  const isWebAuthnSupported = () => {
+    return (
+      window.PublicKeyCredential &&
+      typeof window.PublicKeyCredential === "function"
+    );
+  };
+
+  const handleRegisterFingerprint = async () => {
+    if (!isWebAuthnSupported()) {
+      toast.error("WebAuthn not supported on this browser.");
+      return;
+    }
+
+    try {
+      const publicKey: PublicKeyCredentialCreationOptions = {
+        challenge: new Uint8Array(32), // Normally generated from server
+        rp: { name: "Linker X App" },
+        user: {
+          id: Uint8Array.from(userDetails.id, c => c.charCodeAt(0)),
+          name: userDetails.Email,
+          displayName: `${userDetails.Firstname} ${userDetails.Lastname}`,
+        },
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }], // ES256
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+        },
+        timeout: 60000,
+        attestation: "direct" as AttestationConveyancePreference, // ✅ FIXED HERE
+      };
+
+      const credential = await navigator.credentials.create({ publicKey });
+
+      if (credential) {
+        toast.success("Fingerprint registered successfully");
+        setUserDetails(prev => ({ ...prev, Fingerprint: "Registered" }));
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Fingerprint registration failed");
+    }
+  };
+
+  const handleVerifyFingerprint = async () => {
+    if (!isWebAuthnSupported()) {
+      toast.error("WebAuthn is not supported on this browser.");
+      return;
+    }
+
+    try {
+      const publicKey: PublicKeyCredentialRequestOptions = {
+        challenge: new Uint8Array(32), // In real-world, generate this from the backend
+        timeout: 60000,
+        userVerification: "preferred", // or "required"
+        // You can optionally filter allowed credentials if saved in DB
+        // allowCredentials: [{ type: "public-key", id: Uint8Array.from("credential-id") }]
+      };
+
+      const assertion = await navigator.credentials.get({
+        publicKey
+      });
+
+      if (assertion && assertion.type === "public-key") {
+        toast.success("Fingerprint verified successfully");
+        // optionally handle the assertion.response here
+      } else {
+        toast.error("Fingerprint verification failed");
+      }
+    } catch (error) {
+      console.error("WebAuthn verification error:", error);
+      toast.error("Fingerprint verification failed");
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -77,6 +152,7 @@ const ProfileForm: React.FC = () => {
             Department: data.Department || "",
             Status: data.Status || "",
             profilePicture: data.profilePicture || "",
+            Fingerprint: data.Fingerprint || "",
           };
 
           const savedDraftRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -191,7 +267,7 @@ const ProfileForm: React.FC = () => {
           ContactPassword: "",
         }));
         setPasswordStrength("");
-        
+
         setOriginalDetails((prev) => ({
           ...prev!,
           ...payload,
@@ -263,6 +339,37 @@ const ProfileForm: React.FC = () => {
               />
             </div>
 
+            <div>
+              <label htmlFor="Fingerprint" className="block text-xs font-medium text-gray-700">Fingerprint</label>
+              <input
+                type="text"
+                id="Fingerprint"
+                name="Fingerprint"
+                value={userDetails.Fingerprint}
+                onChange={handleChange}
+                className="mt-1 block w-full px-4 py-2 border-b text-xs text-black capitalize"
+              />
+
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleRegisterFingerprint}
+                className="text-xs px-4 py-2 bg-violet-600 text-white rounded"
+              >
+                Register Fingerprint
+              </button>
+              <button
+                type="button"
+                onClick={handleVerifyFingerprint}
+                className="text-xs px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Verify Fingerprint
+              </button>
+            </div>
+
+
             <Password
               Password={userDetails.Password || ""}
               ContactPassword={userDetails.ContactPassword || ""}
@@ -298,9 +405,8 @@ const ProfileForm: React.FC = () => {
                   {userDetails.Status ? (
                     <>
                       <span
-                        className={`inline-block w-3 h-3 rounded-full text-black ${
-                          STATUS_OPTIONS.find((opt) => opt.value === userDetails.Status)?.color || "bg-gray-400"
-                        }`}
+                        className={`inline-block w-3 h-3 rounded-full text-black ${STATUS_OPTIONS.find((opt) => opt.value === userDetails.Status)?.color || "bg-gray-400"
+                          }`}
                       />
                       {userDetails.Status}
                     </>
@@ -338,9 +444,8 @@ const ProfileForm: React.FC = () => {
                         }
                       }}
                       tabIndex={0}
-                      className={`cursor-pointer flex items-center gap-2 px-4 py-2 hover:bg-gray-100 capitalize ${
-                        userDetails.Status === value ? "font-semibold bg-gray-100" : ""
-                      }`}
+                      className={`cursor-pointer flex items-center gap-2 px-4 py-2 hover:bg-gray-100 capitalize ${userDetails.Status === value ? "font-semibold bg-gray-100" : ""
+                        }`}
                     >
                       <span className={`inline-block w-3 h-3 rounded-full ${color}`} />
                       {label}
