@@ -56,15 +56,10 @@ const ProfileForm: React.FC = () => {
   const autosaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
-  // Check if WebAuthn is supported
   const isWebAuthnSupported = () => {
-    return (
-      window.PublicKeyCredential &&
-      typeof window.PublicKeyCredential === "function"
-    );
+    return window.PublicKeyCredential && typeof window.PublicKeyCredential === "function";
   };
 
-  // REGISTER FINGERPRINT
   const handleRegisterFingerprint = async () => {
     if (!isWebAuthnSupported()) {
       toast.error("WebAuthn not supported on this browser.");
@@ -73,7 +68,7 @@ const ProfileForm: React.FC = () => {
 
     try {
       const publicKey: PublicKeyCredentialCreationOptions = {
-        challenge: new Uint8Array(32), // In production, get this from backend
+        challenge: new Uint8Array(32),
         rp: { name: "Acculog" },
         user: {
           id: Uint8Array.from(userDetails.id, c => c.charCodeAt(0)),
@@ -92,12 +87,9 @@ const ProfileForm: React.FC = () => {
 
       if (credential && credential.type === "public-key") {
         const rawId = credential.rawId;
-        const rawIdBase64 = btoa(
-          String.fromCharCode(...new Uint8Array(rawId))
-        );
+        const rawIdBase64 = btoa(String.fromCharCode(...new Uint8Array(rawId)));
 
         localStorage.setItem("credentialId", rawIdBase64);
-
         toast.success("Fingerprint registered successfully");
         setUserDetails(prev => ({ ...prev, Fingerprint: "Registered" }));
       }
@@ -107,8 +99,6 @@ const ProfileForm: React.FC = () => {
     }
   };
 
-
-  // VERIFY FINGERPRINT
   const handleVerifyFingerprint = async () => {
     if (!isWebAuthnSupported()) {
       toast.error("WebAuthn is not supported on this browser.");
@@ -117,19 +107,14 @@ const ProfileForm: React.FC = () => {
 
     try {
       const savedCredentialId = localStorage.getItem("credentialId");
-
       if (!savedCredentialId) {
         toast.error("No registered passkey found. Please register first.");
         return;
       }
 
-      const credentialIdBytes = Uint8Array.from(
-        atob(savedCredentialId),
-        c => c.charCodeAt(0)
-      );
-
+      const credentialIdBytes = Uint8Array.from(atob(savedCredentialId), c => c.charCodeAt(0));
       const publicKey: PublicKeyCredentialRequestOptions = {
-        challenge: new Uint8Array(32), // In production, generate on backend
+        challenge: new Uint8Array(32),
         timeout: 60000,
         userVerification: "preferred",
         allowCredentials: [
@@ -145,7 +130,6 @@ const ProfileForm: React.FC = () => {
 
       if (assertion && assertion.type === "public-key") {
         toast.success("Fingerprint verified successfully");
-        // You may validate assertion.response here with your server
       } else {
         toast.error("Fingerprint verification failed");
       }
@@ -154,8 +138,7 @@ const ProfileForm: React.FC = () => {
       toast.error("Fingerprint verification failed");
     }
   };
-
-
+  
   useEffect(() => {
     const fetchUserData = async () => {
       const params = new URLSearchParams(window.location.search);

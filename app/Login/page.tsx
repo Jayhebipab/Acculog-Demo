@@ -56,6 +56,49 @@ const Login: React.FC = () => {
     [Email, Password, router]
   );
 
+  const handleVerifyFingerprint = async () => {
+    if (!window.PublicKeyCredential) {
+      toast.error("WebAuthn is not supported in this browser.");
+      return;
+    }
+
+    const storedCredentialId = localStorage.getItem("credentialId");
+
+    if (!storedCredentialId) {
+      toast.error("No fingerprint passkey registered yet.");
+      return;
+    }
+
+    try {
+      const credentialRequestOptions: PublicKeyCredentialRequestOptions = {
+        challenge: new Uint8Array(32),
+        timeout: 60000,
+        rpId: window.location.hostname,
+        allowCredentials: [
+          {
+            id: Uint8Array.from(atob(storedCredentialId), c => c.charCodeAt(0)),
+            type: "public-key",
+          },
+        ],
+        userVerification: "preferred",
+      };
+
+      const assertion = await navigator.credentials.get({
+        publicKey: credentialRequestOptions,
+      }) as PublicKeyCredential;
+
+      if (assertion) {
+        toast.success("Fingerprint verified successfully!");
+        router.push(`/Acculog/Attendance/Dashboard?id=fingerprint_user`);
+      } else {
+        toast.error("Fingerprint verification failed.");
+      }
+    } catch (error) {
+      console.error("Fingerprint verification error:", error);
+      toast.error("Fingerprint login failed or cancelled.");
+    }
+  };
+
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4 transition-colors bg-gradient-to-br from-black via-gray-900 to-black duration-300">
@@ -87,6 +130,14 @@ const Login: React.FC = () => {
           >{loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
+
+        <button
+          type="button"
+          onClick={handleVerifyFingerprint}
+          className="mt-2 w-full py-3 border border-cyan-500 text-cyan-500 font-semibold text-xs rounded-lg hover:bg-cyan-50 transition-all duration-300"
+        >
+          Sign In with Fingerprint
+        </button>
         <p className="mt-4 text-xs text-center font-bold">Acculog - Attendance and Time Tracking System | IT Department</p>
       </div>
     </div>
