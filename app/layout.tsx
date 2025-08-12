@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import InstallPrompt from "./install-prompt"; // ✅ client component
+import InstallPrompt from "./install-prompt";
 
 const inter = Inter({
   weight: "100",
@@ -23,11 +23,7 @@ export const metadata: Metadata = {
   themeColor: "#0f766e",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -37,7 +33,7 @@ export default function RootLayout({
       <body className={`${inter.variable} antialiased`}>
         <ToastContainer />
         {children}
-        <InstallPrompt /> {/* ✅ Render the install button */}
+        <InstallPrompt />
         <Analytics />
         <SpeedInsights />
       </body>

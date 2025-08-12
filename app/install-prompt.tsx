@@ -6,6 +6,7 @@ export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
+    // Register service worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
@@ -13,11 +14,18 @@ export default function InstallPrompt() {
         .catch((err) => console.log("❌ Service Worker registration failed:", err));
     }
 
-    window.addEventListener("beforeinstallprompt", (e) => {
+    // Listen for beforeinstallprompt
+    const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      console.log("📌 beforeinstallprompt event fired");
-    });
+      console.log("📌 beforeinstallprompt fired");
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
   }, []);
 
   const handleInstallClick = async () => {
@@ -34,7 +42,7 @@ export default function InstallPrompt() {
   return (
     <button
       onClick={handleInstallClick}
-      className="fixed bottom-4 right-4 bg-cyan-600 text-white px-4 py-2 rounded-lg shadow-lg"
+      className="fixed bottom-4 right-4 bg-cyan-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-cyan-700"
     >
       📲 Install App
     </button>
