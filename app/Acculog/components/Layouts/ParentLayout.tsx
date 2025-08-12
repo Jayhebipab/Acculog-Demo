@@ -8,35 +8,80 @@ interface ParentLayoutProps {
   children: ReactNode;
 }
 
-interface SidebarSubLink {
-  title: string;
-  href: string;
-}
-
-interface SidebarLink {
-  title: string;
-  href?: string;
-  subItems?: SidebarSubLink[];
-}
-
 const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setDarkMode] = useState(
     typeof window !== "undefined" && localStorage.getItem("theme") === "dark"
   );
   const [userId, setUserId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
     setUserId(id);
+
+    // Detect mobile
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Prevent body scroll when sidebar open on mobile/desktop
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isSidebarOpen]);
+
   return (
-    <div className={`flex style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" ${isDarkMode ? "dark bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(!isSidebarOpen)} isDarkMode={isDarkMode} />
-      <div className={`flex-grow transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-0"} md:ml-64`}>
-        <Navbar onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} onToggleTheme={() => setDarkMode(!isDarkMode)} isDarkMode={isDarkMode} />
+    <div
+      className={`flex ${isDarkMode ? "dark bg-gray-900 text-white" : "bg-white text-gray-900"}`}
+      style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}
+    >
+      {/* Sidebar Overlay for both mobile and desktop */}
+      {isSidebarOpen && (
+        <>
+          {/* Background overlay */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Sidebar panel with slide-in/out */}
+          <div
+            className={`fixed top-0 left-0 h-screen w-64 bg-white dark:bg-gray-900 z-50 shadow-lg transform transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+              className="absolute top-4 right-4 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded"
+            >
+              ✕
+            </button>
+
+            <Sidebar
+              isOpen={isSidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+              isDarkMode={isDarkMode}
+            />
+          </div>
+        </>
+      )}
+
+      {/* Main content */}
+      <div className="flex-grow transition-all duration-300 relative z-10">
+        <Navbar
+          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+          onToggleTheme={() => setDarkMode((prev) => !prev)}
+          isDarkMode={isDarkMode}
+        />
         <main className="p-4 min-h-screen">{children}</main>
         <Footer />
       </div>

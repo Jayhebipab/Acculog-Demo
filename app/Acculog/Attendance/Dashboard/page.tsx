@@ -39,7 +39,7 @@ function StartTutorialButton() {
   return (
     <button
       onClick={() => setIsOpen(true)}
-      className="mb-4 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
+      className="mb-4 bg-blue-600 text-white text-xs px-4 py-2 rounded shadow hover:bg-blue-700 transition"
     >
       📘 Start Tutorial
     </button>
@@ -282,15 +282,6 @@ function DashboardContent() {
             <MapCard posts={filteredAccounts} />
           </div>
         </div>
-
-        {/* Floating Button for Mobile */}
-        <button
-          onClick={openFormWithAnimation}
-          className="fixed bottom-10 right-10 bg-green-700 text-white rounded-full text-3xl flex items-center justify-center z-[10000] md:hidden"
-          style={{ width: "60px", height: "60px" }}
-        >
-          +
-        </button>
 
         <ToastContainer className="text-xs" autoClose={1000} />
       </ParentLayout>

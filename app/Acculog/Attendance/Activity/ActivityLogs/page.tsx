@@ -261,17 +261,6 @@ const ListofUser: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Floating Add Activity Button – only on small screens */}
-                            <button
-                                onClick={openFormWithAnimation}
-                                aria-label="Add Activity"
-                                title="Add Activity"
-                                className="fixed bottom-10 right-10 shadow-xl bg-green-700 hover:bg-gray-800 text-white rounded-full text-xl flex items-center justify-center z-[10000] md:hidden"
-                                style={{ width: "60px", height: "60px", padding: 0 }}
-                            >
-                                +
-                            </button>
-
                             <ToastContainer className="text-xs" autoClose={1000} />
                         </div>
                     )}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Nunito } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
@@ -7,11 +7,12 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import InstallPrompt from "./install-prompt";
 
-const inter = Inter({
-  weight: "100",
+const nunito = Nunito({
+  weight: ["200", "400", "700"],
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-nunito",
 });
+
 
 export const metadata: Metadata = {
   title: "Acculog - Attendance & Time Tracking System",
@@ -30,10 +31,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0f766e" />
       </head>
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${nunito.variable} font-sans antialiased relative`}>
         <ToastContainer />
         {children}
-        <InstallPrompt />
+
+        {/* InstallPrompt with fixed position and high z-index */}
+        <div className="fixed inset-0 z-[9999] pointer-events-none">
+          <InstallPrompt />
+        </div>
+
         <Analytics />
         <SpeedInsights />
       </body>
