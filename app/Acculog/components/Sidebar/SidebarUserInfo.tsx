@@ -29,6 +29,7 @@ const SidebarUserInfo: React.FC<SidebarUserInfoProps> = ({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const router = useRouter();
+
   if (collapsed) return null;
 
   const statusColor = {
@@ -64,11 +65,9 @@ const SidebarUserInfo: React.FC<SidebarUserInfoProps> = ({
 
   return (
     <div
-      className={`
-        relative p-6 dark:bg-gray-900 dark:border-gray-700 flex items-center justify-between flex-shrink-0 overflow-hidden
-        md:sticky md:bottom-16 md:z-10
-      `}
-      style={{ zIndex: 10 }}
+      className="
+        p-6 dark:bg-gray-900 dark:border-gray-700 flex items-center justify-between flex-shrink-0 overflow-hidden
+      "
     >
       <audio src="/binary-logout-sfx.mp3" ref={audioRef} />
 
