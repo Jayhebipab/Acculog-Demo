@@ -33,7 +33,6 @@ const Form: React.FC<FormProps> = ({
   setForm,
   setShowForm,
 }) => {
-  const [statusOptions, setStatusOptions] = useState<string[]>(["Login"]);
   const [locationAddress, setLocationAddress] = useState<string>("Fetching location...");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -94,52 +93,6 @@ const Form: React.FC<FormProps> = ({
     const data = await res.json();
     return data.secure_url;
   };
-
-  const checkIfLoggedInToday = async (type: string) => {
-    if (!type) {
-      setStatusOptions(["Login"]);
-      return;
-    }
-    try {
-      const res = await fetch("/api/ModuleSales/Activity/FetchLog");
-      if (!res.ok) throw new Error("Failed to fetch logs");
-      const data = await res.json();
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const userRefId = userDetails.ReferenceID.toLowerCase();
-      const logsToday = data.data.filter((log: any) => {
-        const d = new Date(log.date_created);
-        d.setHours(0, 0, 0, 0);
-        return (
-          (log.ReferenceID?.toLowerCase() === userRefId || log.referenceid?.toLowerCase() === userRefId) &&
-          log.Type === type &&
-          d.getTime() === today.getTime()
-        );
-      });
-      const hasActiveLogin = logsToday.some((log: any) => {
-        if (log.Status === "Login") {
-          const logoutAfter = logsToday.find(
-            (l: any) =>
-              l.Status === "Logout" &&
-              new Date(l.date_created) > new Date(log.date_created)
-          );
-          return !logoutAfter;
-        }
-        return false;
-      });
-      setStatusOptions(hasActiveLogin ? ["Logout"] : ["Login"]);
-      if (hasActiveLogin && formData.Status === "Login") {
-        onChange("Status", "");
-      }
-    } catch (err) {
-      console.error(err);
-      setStatusOptions(["Login", "Logout"]);
-    }
-  };
-
-  useEffect(() => {
-    checkIfLoggedInToday(formData.Type);
-  }, [formData.Type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,12 +192,12 @@ const Form: React.FC<FormProps> = ({
               <select
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-black focus:outline-none transition-all"
                 value={formData.Status}
-                onChange={(e) => onChange("Type", e.target.value)}
+                onChange={(e) => onChange("Status", e.target.value)}
                 required
               >
                 <option value="">Select Status</option>
                 <option value="Login">Login</option>
-                <option value="Logout">Logout</option>
+                <option value="Logout">Logout</option> 
               </select>
             </div>
 
