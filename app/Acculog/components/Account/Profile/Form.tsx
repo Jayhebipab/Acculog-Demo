@@ -160,25 +160,77 @@ const ProfileForm: React.FC = () => {
   // -- NEW FUNCTION TO REGISTER FINGERPRINT --
   // In real app, this will interface with biometric device SDK/API
   const registerFingerprint = async () => {
+    if (!window.PublicKeyCredential) {
+      toast.error("WebAuthn (biometric) is not supported on this browser/device.");
+      return;
+    }
+
     try {
-      // Example placeholder: simulate fingerprint scanning & return a key/id
-      toast.info("Please scan your fingerprint on your biometric device...");
-      await new Promise((r) => setTimeout(r, 3000)); // simulate delay
+      // Step 1: Get registration options (challenge, rp, user info, etc) from your backend
+      const resp = await fetch("/api/auth/webauthn/register/options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userDetails.id }),
+      });
+      if (!resp.ok) throw new Error("Failed to get registration options");
+      const options = await resp.json();
 
-      // Generate dummy fingerprint key (in reality, get from device)
-      const dummyFingerprintKey = "fingerprint_hash_" + Math.random().toString(36).substring(2, 15);
+      // Step 2: Prepare options (convert base64 to ArrayBuffers)
+      options.challenge = Uint8Array.from(atob(options.challenge), c => c.charCodeAt(0));
+      options.user.id = Uint8Array.from(atob(options.user.id), c => c.charCodeAt(0));
 
-      setUserDetails((prev) => ({
-        ...prev,
-        FingerprintKey: dummyFingerprintKey,
-      }));
+      if (options.excludeCredentials) {
+        options.excludeCredentials = options.excludeCredentials.map((cred: any) => ({
+          ...cred,
+          id: Uint8Array.from(atob(cred.id), c => c.charCodeAt(0)),
+        }));
+      }
 
-      toast.success("Fingerprint registered successfully!");
-    } catch (error) {
-      toast.error("Fingerprint registration failed.");
-      console.error(error);
+      // Step 3: Call WebAuthn API to create credentials (trigger biometric prompt)
+      const credential: PublicKeyCredential = await navigator.credentials.create({
+        publicKey: options,
+      }) as PublicKeyCredential;
+
+      if (!credential) throw new Error("Credential creation failed");
+
+      // Step 4: Prepare attestation response to send back to server
+      const attestationResponse = credential.response as AuthenticatorAttestationResponse;
+
+      const clientDataJSON = btoa(String.fromCharCode(...new Uint8Array(attestationResponse.clientDataJSON)));
+      const attestationObject = btoa(String.fromCharCode(...new Uint8Array(attestationResponse.attestationObject)));
+
+      const dataToSend = {
+        id: credential.id,
+        rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+        type: credential.type,
+        clientDataJSON,
+        attestationObject,
+      };
+
+      // Step 5: Send attestation to server to verify and save fingerprint credential
+      const verifyResp = await fetch("/api/auth/webauthn/register/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userDetails.id, credential: dataToSend }),
+      });
+
+      const verifyResult = await verifyResp.json();
+
+      if (verifyResp.ok && verifyResult.success) {
+        toast.success("Fingerprint registered successfully!");
+        setUserDetails(prev => ({
+          ...prev,
+          FingerprintKey: verifyResult.credentialId, // or whatever identifier you store
+        }));
+      } else {
+        throw new Error(verifyResult.message || "Fingerprint registration failed");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Fingerprint registration error");
+      console.error(err);
     }
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
