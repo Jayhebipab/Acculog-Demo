@@ -18,7 +18,6 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
-  /* ---------------------- Start the webcam ---------------------- */
   const startCamera = (mode: "user" | "environment") => {
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: mode } })
@@ -34,6 +33,7 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
   };
 
   useEffect(() => {
+    // Start with default camera on mount only
     startCamera(facingMode);
 
     return () => {
@@ -41,17 +41,20 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
     };
-  }, [facingMode]);
+  }, []); // empty deps, run once
 
-  /* ------------------------- Flip camera ------------------------ */
   const flipCamera = () => {
+    const newMode = facingMode === "user" ? "environment" : "user";
+
+    // Stop current stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
     }
-    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+
+    setFacingMode(newMode);
+    startCamera(newMode);
   };
 
-  /* -------------------- Handle tap countdown -------------------- */
   const handleTap = () => {
     if (capturedImage) return;
     if (countdown === null) {
@@ -65,14 +68,10 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
       capture();
       return;
     }
-    const timer = setTimeout(
-      () => setCountdown((prev) => (prev! > 0 ? prev! - 1 : 0)),
-      1000
-    );
+    const timer = setTimeout(() => setCountdown((prev) => (prev! > 0 ? prev! - 1 : 0)), 1000);
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  /* ---------------------- Capture image ---------------------- */
   const capture = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
@@ -94,7 +93,6 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
     }
   };
 
-  /* ---------------------- Retake photo ---------------------- */
   const retakePhoto = () => {
     setCapturedImage(null);
     setCountdown(null);
