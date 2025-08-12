@@ -20,7 +20,7 @@ export default async function updateProfile(req: NextApiRequest, res: NextApiRes
     ContactNumber,
     Password,
     profilePicture,
-    Fingerprint, // ✅ Added Fingerprint field
+    FingerprintKey,  // <-- add FingerprintKey here
   } = req.body;
 
   if (!id) {
@@ -46,13 +46,13 @@ export default async function updateProfile(req: NextApiRequest, res: NextApiRes
       updatedUser.profilePicture = profilePicture;
     }
 
-    if (Fingerprint) {
-      updatedUser.Fingerprint = Fingerprint; // ✅ Save fingerprint status
-    }
-
     if (Password && Password.trim() !== "") {
       const hashedPassword = await bcrypt.hash(Password, 10);
       updatedUser.Password = hashedPassword;
+    }
+
+    if (FingerprintKey && FingerprintKey.trim() !== "") {
+      updatedUser.FingerprintKey = FingerprintKey; // <-- update fingerprint key
     }
 
     const result = await userCollection.updateOne(

@@ -12,13 +12,16 @@ const Login: React.FC = () => {
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingFingerprint, setLoadingFingerprint] = useState(false);
   const router = useRouter();
 
+  // Utility to check WebAuthn support
   const isWebAuthnSupported = () =>
     typeof window !== "undefined" &&
     window.PublicKeyCredential &&
     typeof window.PublicKeyCredential === "function";
 
+  // Regular email/password login
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -56,12 +59,54 @@ const Login: React.FC = () => {
     [Email, Password, router]
   );
 
+  // Fingerprint login flow
   const handleVerifyFingerprint = async () => {
     if (!isWebAuthnSupported()) {
       toast.error("WebAuthn is not supported in this browser.");
       return;
     }
-    toast.info("Fingerprint login feature coming soon!");
+
+    try {
+      setLoadingFingerprint(true);
+      toast.info("Verifying fingerprint...");
+
+      // In a real app, this is where you'd call WebAuthn APIs like navigator.credentials.get()
+      // For demo, prompt user to input registered FingerprintKey (simulate biometric auth)
+      const fingerprintKey = prompt(
+        "Enter your registered fingerprint key to simulate biometric login:"
+      );
+
+      if (!fingerprintKey) {
+        toast.error("Fingerprint key is required for login.");
+        setLoadingFingerprint(false);
+        return;
+      }
+
+      // Call your backend login endpoint for fingerprint login
+      const response = await fetch("/api/login/fingerprint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ FingerprintKey: fingerprintKey }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.userId) {
+        toast.success("Fingerprint login successful!");
+        setTimeout(() => {
+          router.push(
+            `/Acculog/Attendance/Dashboard?id=${encodeURIComponent(result.userId)}`
+          );
+        }, 800);
+      } else {
+        toast.error(result.message || "Fingerprint login failed!");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred during fingerprint login!");
+    } finally {
+      setLoadingFingerprint(false);
+    }
   };
 
   return (
@@ -94,6 +139,7 @@ const Login: React.FC = () => {
               value={Email}
               onChange={(e) => setEmail(e.target.value)}
               className="flex-1 bg-transparent outline-none text-sm text-gray-800"
+              disabled={loading || loadingFingerprint}
             />
           </div>
 
@@ -106,13 +152,14 @@ const Login: React.FC = () => {
               value={Password}
               onChange={(e) => setPassword(e.target.value)}
               className="flex-1 bg-transparent outline-none text-sm text-gray-800"
+              disabled={loading || loadingFingerprint}
             />
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || loadingFingerprint}
             className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold text-sm rounded-lg transition-all duration-300 shadow-md hover:scale-[1.02] disabled:opacity-60"
           >
             {loading ? "Signing In..." : "Sign In"}
@@ -123,9 +170,10 @@ const Login: React.FC = () => {
         <button
           type="button"
           onClick={handleVerifyFingerprint}
+          disabled={loading || loadingFingerprint}
           className="mt-3 w-full py-3 border border-cyan-400 text-cyan-600 font-medium text-sm rounded-lg hover:bg-cyan-50 transition-all duration-300 flex items-center justify-center gap-2"
         >
-          <LuFingerprint size={16} /> Sign In with Fingerprint
+          {loadingFingerprint ? "Verifying..." : <><LuFingerprint size={16} /> Sign In with Fingerprint</>}
         </button>
 
         {/* Footer */}

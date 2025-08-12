@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-// Toast Notifications
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// Route
 import Picture from "../../../components/Account/Profile/Picture";
 import Password from "../../../components/Account/Profile/Password";
 
@@ -20,7 +18,7 @@ interface UserDetails {
   ContactPassword?: string;
   ContactNumber: string;
   profilePicture: string;
-  Fingerprint: string;
+  FingerprintKey?: string; // <-- new field for fingerprint registration
 }
 
 const STATUS_OPTIONS = [
@@ -45,7 +43,7 @@ const ProfileForm: React.FC = () => {
     Department: "",
     Status: "",
     profilePicture: "",
-    Fingerprint: "",
+    FingerprintKey: "", // initialize fingerprint key
   });
 
   const [originalDetails, setOriginalDetails] = useState<UserDetails | null>(null);
@@ -55,96 +53,6 @@ const ProfileForm: React.FC = () => {
   const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong" | "">("");
   const autosaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-
-  const isWebAuthnSupported = () => {
-    return (
-      window.PublicKeyCredential &&
-      typeof window.PublicKeyCredential === "function"
-    );
-  };
-
-  const handleRegisterFingerprint = async () => {
-    if (!isWebAuthnSupported()) {
-      toast.error("WebAuthn not supported on this browser.");
-      return;
-    }
-
-    try {
-      const publicKey: PublicKeyCredentialCreationOptions = {
-        challenge: new Uint8Array(32), // Ideally, get this from your backend
-        rp: { name: "Acculog" },
-        user: {
-          id: Uint8Array.from(userDetails.id, c => c.charCodeAt(0)),
-          name: userDetails.Email,
-          displayName: `${userDetails.Firstname} ${userDetails.Lastname}`,
-        },
-        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-        authenticatorSelection: {
-          authenticatorAttachment: "platform",
-        },
-        timeout: 60000,
-        attestation: "direct",
-      };
-
-      const credential = await navigator.credentials.create({ publicKey }) as PublicKeyCredential;
-
-      if (credential && credential.type === "public-key") {
-        const rawId = credential.rawId;
-        const rawIdBase64 = btoa(String.fromCharCode(...new Uint8Array(rawId)));
-
-        // Save both credential ID and email to localStorage
-        localStorage.setItem("credentialId", rawIdBase64);
-        localStorage.setItem("email", userDetails.Email);
-
-        toast.success("Fingerprint registered successfully");
-        setUserDetails(prev => ({ ...prev, Fingerprint: "Registered" }));
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Fingerprint registration failed");
-    }
-  };
-
-
-  const handleVerifyFingerprint = async () => {
-    if (!isWebAuthnSupported()) {
-      toast.error("WebAuthn is not supported on this browser.");
-      return;
-    }
-
-    try {
-      const savedCredentialId = localStorage.getItem("credentialId");
-      if (!savedCredentialId) {
-        toast.error("No registered passkey found. Please register first.");
-        return;
-      }
-
-      const credentialIdBytes = Uint8Array.from(atob(savedCredentialId), c => c.charCodeAt(0));
-      const publicKey: PublicKeyCredentialRequestOptions = {
-        challenge: new Uint8Array(32),
-        timeout: 60000,
-        userVerification: "preferred",
-        allowCredentials: [
-          {
-            type: "public-key",
-            id: credentialIdBytes,
-            transports: ["internal"],
-          },
-        ],
-      };
-
-      const assertion = await navigator.credentials.get({ publicKey });
-
-      if (assertion && assertion.type === "public-key") {
-        toast.success("Fingerprint verified successfully");
-      } else {
-        toast.error("Fingerprint verification failed");
-      }
-    } catch (error) {
-      console.error("WebAuthn verification error:", error);
-      toast.error("Fingerprint verification failed");
-    }
-  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -169,7 +77,7 @@ const ProfileForm: React.FC = () => {
             Department: data.Department || "",
             Status: data.Status || "",
             profilePicture: data.profilePicture || "",
-            Fingerprint: data.Fingerprint || "",
+            FingerprintKey: data.FingerprintKey || "", // fetch fingerprint key if available
           };
 
           const savedDraftRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -247,6 +155,29 @@ const ProfileForm: React.FC = () => {
     if (password.match(/^(?=.*[a-z])(?=.*\d).{6,}$/)) return "medium";
     if (password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/)) return "strong";
     return "weak";
+  };
+
+  // -- NEW FUNCTION TO REGISTER FINGERPRINT --
+  // In real app, this will interface with biometric device SDK/API
+  const registerFingerprint = async () => {
+    try {
+      // Example placeholder: simulate fingerprint scanning & return a key/id
+      toast.info("Please scan your fingerprint on your biometric device...");
+      await new Promise((r) => setTimeout(r, 3000)); // simulate delay
+
+      // Generate dummy fingerprint key (in reality, get from device)
+      const dummyFingerprintKey = "fingerprint_hash_" + Math.random().toString(36).substring(2, 15);
+
+      setUserDetails((prev) => ({
+        ...prev,
+        FingerprintKey: dummyFingerprintKey,
+      }));
+
+      toast.success("Fingerprint registered successfully!");
+    } catch (error) {
+      toast.error("Fingerprint registration failed.");
+      console.error(error);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -344,48 +275,27 @@ const ProfileForm: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
             <div>
               <label htmlFor="Firstname" className="block text-xs font-medium text-gray-700">First Name</label>
-              <input type="text" id="Firstname" name="Firstname" value={userDetails.Firstname} onChange={handleChange}
+              <input
+                type="text"
+                id="Firstname"
+                name="Firstname"
+                value={userDetails.Firstname}
+                onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border-b text-xs text-black capitalize"
               />
             </div>
 
             <div>
               <label htmlFor="Lastname" className="block text-xs font-medium text-gray-700">Last Name</label>
-              <input type="text" id="Lastname" name="Lastname" value={userDetails.Lastname} onChange={handleChange}
-                className="mt-1 block w-full px-4 py-2 border-b text-xs text-black capitalize"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="Fingerprint" className="block text-xs font-medium text-gray-700">Fingerprint</label>
               <input
                 type="text"
-                id="Fingerprint"
-                name="Fingerprint"
-                value={userDetails.Fingerprint}
+                id="Lastname"
+                name="Lastname"
+                value={userDetails.Lastname}
                 onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border-b text-xs text-black capitalize"
               />
-
             </div>
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleRegisterFingerprint}
-                className="text-xs px-4 py-2 bg-violet-600 text-white rounded"
-              >
-                Register Fingerprint
-              </button>
-              <button
-                type="button"
-                onClick={handleVerifyFingerprint}
-                className="text-xs px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                Verify Fingerprint
-              </button>
-            </div>
-
 
             <Password
               Password={userDetails.Password || ""}
@@ -396,14 +306,24 @@ const ProfileForm: React.FC = () => {
 
             <div>
               <label htmlFor="Email" className="block text-xs font-medium text-gray-700">Email Address</label>
-              <input type="email" id="Email" name="Email" value={userDetails.Email} onChange={handleChange}
+              <input
+                type="email"
+                id="Email"
+                name="Email"
+                value={userDetails.Email}
+                onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border-b text-xs text-black"
               />
             </div>
 
             <div>
               <label htmlFor="ContactNumber" className="block text-xs font-medium text-gray-700">Contact Number</label>
-              <input type="text" id="ContactNumber" name="ContactNumber" value={userDetails.ContactNumber} onChange={handleChange}
+              <input
+                type="text"
+                id="ContactNumber"
+                name="ContactNumber"
+                value={userDetails.ContactNumber}
+                onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border-b text-xs text-black"
               />
             </div>
@@ -472,7 +392,29 @@ const ProfileForm: React.FC = () => {
               )}
             </div>
 
-            <div className="flex gap-2">
+            {/* ======= NEW BIOMETRIC FINGERPRINT SECTION ======= */}
+            <div className="mt-4 p-4 border rounded bg-gray-50">
+              <label className="block text-xs font-semibold mb-1">Fingerprint Registration</label>
+              {userDetails.FingerprintKey ? (
+                <div className="mb-2 text-green-600 text-xs">
+                  Fingerprint registered: <code className="break-all">{userDetails.FingerprintKey}</code>
+                </div>
+              ) : (
+                <div className="mb-2 text-red-600 text-xs">No fingerprint registered yet.</div>
+              )}
+              <button
+                type="button"
+                onClick={registerFingerprint}
+                className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700"
+              >
+                Register Fingerprint
+              </button>
+              <p className="mt-2 text-gray-500 text-xs">
+                Use fingerprint for login instead of email/password after registering.
+              </p>
+            </div>
+
+            <div className="flex gap-2 mt-4">
               <button
                 type="submit"
                 className="bg-black text-white text-xs px-4 py-2 rounded disabled:opacity-50"
