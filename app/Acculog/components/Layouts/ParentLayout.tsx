@@ -1,8 +1,18 @@
+"use client";
+
 import React, { useState, useEffect, ReactNode } from "react";
 // Components
 import Sidebar from "../Sidebar/Sidebar";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
+import { Roboto } from "next/font/google";
+
+// Load Roboto font with weights 400 & 700 (adjust as needed)
+const roboto = Roboto({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-roboto",
+});
 
 interface ParentLayoutProps {
   children: ReactNode;
@@ -21,26 +31,24 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
     const id = params.get("id");
     setUserId(id);
 
-    // Detect mobile
+    // Detect mobile viewport width < 768px
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
+
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Prevent body scroll when sidebar open on mobile/desktop
+  // Prevent body scroll when sidebar is open (mobile or desktop)
   useEffect(() => {
-    if (isSidebarOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = isSidebarOpen ? "hidden" : "";
   }, [isSidebarOpen]);
 
   return (
     <div
-      className={`flex ${isDarkMode ? "dark bg-gray-900 text-white" : "bg-white text-gray-900"}`}
-      style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}
+      className={`${roboto.variable} font-sans flex ${
+        isDarkMode ? "dark bg-gray-900 text-white" : "bg-white text-gray-900"
+      }`}
     >
       {/* Sidebar Overlay for both mobile and desktop */}
       {isSidebarOpen && (
@@ -54,8 +62,9 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
 
           {/* Sidebar panel with slide-in/out */}
           <div
-            className={`fixed top-0 left-0 h-screen w-64 bg-white dark:bg-gray-900 z-50 shadow-lg transform transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-              }`}
+            className={`fixed top-0 left-0 h-screen w-64 bg-white dark:bg-gray-900 z-50 shadow-lg transform transition-transform duration-300 ${
+              isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
           >
             {/* Close button */}
             <button
