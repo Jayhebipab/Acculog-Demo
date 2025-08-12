@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+// Toast Notifications
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+// Route
 import Picture from "../../../components/Account/Profile/Picture";
 import Password from "../../../components/Account/Profile/Password";
 
@@ -18,7 +20,6 @@ interface UserDetails {
   ContactPassword?: string;
   ContactNumber: string;
   profilePicture: string;
-  FingerprintKey?: string; // <-- new field for fingerprint registration
 }
 
 const STATUS_OPTIONS = [
@@ -43,7 +44,6 @@ const ProfileForm: React.FC = () => {
     Department: "",
     Status: "",
     profilePicture: "",
-    FingerprintKey: "", // initialize fingerprint key
   });
 
   const [originalDetails, setOriginalDetails] = useState<UserDetails | null>(null);
@@ -77,7 +77,6 @@ const ProfileForm: React.FC = () => {
             Department: data.Department || "",
             Status: data.Status || "",
             profilePicture: data.profilePicture || "",
-            FingerprintKey: data.FingerprintKey || "", // fetch fingerprint key if available
           };
 
           const savedDraftRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -156,81 +155,6 @@ const ProfileForm: React.FC = () => {
     if (password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/)) return "strong";
     return "weak";
   };
-
-  // -- NEW FUNCTION TO REGISTER FINGERPRINT --
-  // In real app, this will interface with biometric device SDK/API
-  const registerFingerprint = async () => {
-    if (!window.PublicKeyCredential) {
-      toast.error("WebAuthn (biometric) is not supported on this browser/device.");
-      return;
-    }
-
-    try {
-      // Step 1: Get registration options (challenge, rp, user info, etc) from your backend
-      const resp = await fetch("/api/auth/webauthn/register/options", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: userDetails.id }),
-      });
-      if (!resp.ok) throw new Error("Failed to get registration options");
-      const options = await resp.json();
-
-      // Step 2: Prepare options (convert base64 to ArrayBuffers)
-      options.challenge = Uint8Array.from(atob(options.challenge), c => c.charCodeAt(0));
-      options.user.id = Uint8Array.from(atob(options.user.id), c => c.charCodeAt(0));
-
-      if (options.excludeCredentials) {
-        options.excludeCredentials = options.excludeCredentials.map((cred: any) => ({
-          ...cred,
-          id: Uint8Array.from(atob(cred.id), c => c.charCodeAt(0)),
-        }));
-      }
-
-      // Step 3: Call WebAuthn API to create credentials (trigger biometric prompt)
-      const credential: PublicKeyCredential = await navigator.credentials.create({
-        publicKey: options,
-      }) as PublicKeyCredential;
-
-      if (!credential) throw new Error("Credential creation failed");
-
-      // Step 4: Prepare attestation response to send back to server
-      const attestationResponse = credential.response as AuthenticatorAttestationResponse;
-
-      const clientDataJSON = btoa(String.fromCharCode(...new Uint8Array(attestationResponse.clientDataJSON)));
-      const attestationObject = btoa(String.fromCharCode(...new Uint8Array(attestationResponse.attestationObject)));
-
-      const dataToSend = {
-        id: credential.id,
-        rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
-        type: credential.type,
-        clientDataJSON,
-        attestationObject,
-      };
-
-      // Step 5: Send attestation to server to verify and save fingerprint credential
-      const verifyResp = await fetch("/api/auth/webauthn/register/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: userDetails.id, credential: dataToSend }),
-      });
-
-      const verifyResult = await verifyResp.json();
-
-      if (verifyResp.ok && verifyResult.success) {
-        toast.success("Fingerprint registered successfully!");
-        setUserDetails(prev => ({
-          ...prev,
-          FingerprintKey: verifyResult.credentialId, // or whatever identifier you store
-        }));
-      } else {
-        throw new Error(verifyResult.message || "Fingerprint registration failed");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Fingerprint registration error");
-      console.error(err);
-    }
-  };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -327,24 +251,14 @@ const ProfileForm: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
             <div>
               <label htmlFor="Firstname" className="block text-xs font-medium text-gray-700">First Name</label>
-              <input
-                type="text"
-                id="Firstname"
-                name="Firstname"
-                value={userDetails.Firstname}
-                onChange={handleChange}
+              <input type="text" id="Firstname" name="Firstname" value={userDetails.Firstname} onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border-b text-xs text-black capitalize"
               />
             </div>
 
             <div>
               <label htmlFor="Lastname" className="block text-xs font-medium text-gray-700">Last Name</label>
-              <input
-                type="text"
-                id="Lastname"
-                name="Lastname"
-                value={userDetails.Lastname}
-                onChange={handleChange}
+              <input type="text" id="Lastname" name="Lastname" value={userDetails.Lastname} onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border-b text-xs text-black capitalize"
               />
             </div>
@@ -358,24 +272,14 @@ const ProfileForm: React.FC = () => {
 
             <div>
               <label htmlFor="Email" className="block text-xs font-medium text-gray-700">Email Address</label>
-              <input
-                type="email"
-                id="Email"
-                name="Email"
-                value={userDetails.Email}
-                onChange={handleChange}
+              <input type="email" id="Email" name="Email" value={userDetails.Email} onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border-b text-xs text-black"
               />
             </div>
 
             <div>
               <label htmlFor="ContactNumber" className="block text-xs font-medium text-gray-700">Contact Number</label>
-              <input
-                type="text"
-                id="ContactNumber"
-                name="ContactNumber"
-                value={userDetails.ContactNumber}
-                onChange={handleChange}
+              <input type="text" id="ContactNumber" name="ContactNumber" value={userDetails.ContactNumber} onChange={handleChange}
                 className="mt-1 block w-full px-4 py-2 border-b text-xs text-black"
               />
             </div>
@@ -444,29 +348,7 @@ const ProfileForm: React.FC = () => {
               )}
             </div>
 
-            {/* ======= NEW BIOMETRIC FINGERPRINT SECTION ======= */}
-            <div className="mt-4 p-4 border rounded bg-gray-50">
-              <label className="block text-xs font-semibold mb-1">Fingerprint Registration</label>
-              {userDetails.FingerprintKey ? (
-                <div className="mb-2 text-green-600 text-xs">
-                  Fingerprint registered: <code className="break-all">{userDetails.FingerprintKey}</code>
-                </div>
-              ) : (
-                <div className="mb-2 text-red-600 text-xs">No fingerprint registered yet.</div>
-              )}
-              <button
-                type="button"
-                onClick={registerFingerprint}
-                className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700"
-              >
-                Register Fingerprint
-              </button>
-              <p className="mt-2 text-gray-500 text-xs">
-                Use fingerprint for login instead of email/password after registering.
-              </p>
-            </div>
-
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2">
               <button
                 type="submit"
                 className="bg-black text-white text-xs px-4 py-2 rounded disabled:opacity-50"

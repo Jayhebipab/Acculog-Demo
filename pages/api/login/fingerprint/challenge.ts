@@ -25,14 +25,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Generate random challenge (32 bytes)
     const challenge = base64url(crypto.randomBytes(32));
 
-    // You should save this challenge server-side (session, DB, cache) tied to the user to verify later
-    // For simplicity, let's just send it back here and let client send it back for verification
+    // TODO: Save challenge tied to user in DB or session for verification later
 
     // Construct PublicKeyCredentialRequestOptions
     const options = {
       challenge,
       timeout: 60000,
-      rpId: "your-domain.com", // replace with your actual domain
+      rpId: "localhost", // <-- dito na naka localhost para testing sa local dev environment
       allowCredentials: [
         {
           id: base64url.toBuffer(user.FingerprintKey),
@@ -42,8 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ],
       userVerification: "preferred",
     };
-
-    // TODO: Save the challenge tied to the user in DB/session for verification later
 
     res.status(200).json(options);
   } catch (error) {
