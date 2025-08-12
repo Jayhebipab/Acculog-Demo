@@ -42,7 +42,7 @@ const SidebarListing: React.FC<SidebarListingProps> = ({
   }, [query, locsWithDist]);
 
   return (
-    <div className="md:w-1/3 flex flex-col gap-2 text-xs">
+    <div className="md:w-1/3 flex flex-col gap-2 text-xs text-black">
       <h3 className="font-semibold">
         Location Visit Counts (Distance &amp; ETA)
       </h3>
@@ -74,7 +74,7 @@ const SidebarListing: React.FC<SidebarListingProps> = ({
                 className="border shadow-md rounded-md divide-y text-[11px]"
               >
                 <button
-                  className="w-full text-left p-2 hover:text-green-800 focus:outline-none flex items-start gap-2"
+                  className="w-full text-left p-2 text-black hover:text-green-800 focus:outline-none flex items-start gap-2"
                   onClick={() => flyTo(lat, lon)}
                 >
                   <span>
