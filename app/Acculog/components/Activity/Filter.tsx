@@ -1,4 +1,5 @@
 import React from "react";
+import { FaSearch, FaFilter, FaCalendarAlt, FaTimes } from "react-icons/fa";
 
 interface FilterProps {
   searchQuery: string;
@@ -21,49 +22,74 @@ const Filter: React.FC<FilterProps> = ({
   endDate,
   setEndDate,
 }) => {
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilterType("");
+    setStartDate("");
+    setEndDate("");
+  };
+
   return (
-    <div className="md:flex-row md:items-center gap-2 mb-4 flex flex-wrap gap-2">
+    <div className="flex flex-wrap md:flex-row md:items-center gap-3 mb-4 p-3 bg-white rounded-lg shadow-sm border">
       {/* Search input */}
-      <input
-        type="text"
-        placeholder="Search by Type or Status"
-        className="shadow-sm border px-3 py-2 rounded text-xs w-full md:w-auto flex-grow capitalize"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
+      <div className="relative flex-grow md:flex-grow-0">
+        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
+        <input
+          type="text"
+          placeholder="Search by Type or Status"
+          className="pl-8 pr-3 py-2 border rounded text-xs w-full md:w-52 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm capitalize"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
 
       {/* Filter by Type */}
-      <select
-        className="shadow-sm border px-3 py-2 rounded text-xs w-full md:w-auto flex-grow capitalize"
-        value={filterType}
-        onChange={(e) => setFilterType(e.target.value)}
-      >
-        <option value="">All Types</option>
-        <option value="HR Attendance">HR Attendance</option>
-        <option value="On Field">On Field</option>
-        <option value="Site Visit">Site Visit</option>
-        <option value="On Site">On Site</option>
-      </select>
+      <div className="relative">
+        <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
+        <select
+          className="pl-8 pr-3 py-2 border rounded text-xs w-full md:w-40 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm capitalize"
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+        >
+          <option value="">All Types</option>
+          <option value="HR Attendance">HR Attendance</option>
+          <option value="On Field">On Field</option>
+          <option value="Site Visit">Site Visit</option>
+          <option value="On Site">On Site</option>
+        </select>
+      </div>
 
-      {/* Date range filter */}
-      <label className="text-xs">
-        From:{" "}
+      {/* Start Date */}
+      <div className="relative">
+        <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
         <input
           type="date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          className="shadow-sm border px-3 py-2 rounded text-xs w-full md:w-auto flex-grow"
+          className="pl-8 pr-3 py-2 border rounded text-xs w-full md:w-36 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
-      </label>
-      <label className="text-xs">
-        To:{" "}
+      </div>
+
+      {/* End Date */}
+      <div className="relative">
+        <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
         <input
           type="date"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
-          className="shadow-sm border px-3 py-2 rounded text-xs w-full md:w-auto flex-grow"
+          className="pl-8 pr-3 py-2 border rounded text-xs w-full md:w-36 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
-      </label>
+      </div>
+
+      {/* Clear Filters Button */}
+      {(searchQuery || filterType || startDate || endDate) && (
+        <button
+          onClick={clearFilters}
+          className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 transition"
+        >
+          <FaTimes /> Clear
+        </button>
+      )}
     </div>
   );
 };

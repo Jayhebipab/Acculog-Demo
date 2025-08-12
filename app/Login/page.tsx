@@ -4,6 +4,8 @@ import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ToastContainer, toast } from "react-toastify";
+import { FiMail, FiLock } from "react-icons/fi";
+import { LuFingerprint } from "react-icons/lu";
 import "react-toastify/dist/ReactToastify.css";
 
 const Login: React.FC = () => {
@@ -12,11 +14,10 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const isWebAuthnSupported = () => {
-    return typeof window !== 'undefined' &&
-      window.PublicKeyCredential &&
-      typeof window.PublicKeyCredential === "function";
-  };
+  const isWebAuthnSupported = () =>
+    typeof window !== "undefined" &&
+    window.PublicKeyCredential &&
+    typeof window.PublicKeyCredential === "function";
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -36,24 +37,17 @@ const Login: React.FC = () => {
 
         const result = await response.json();
 
-        console.log("Login API response:", result);
-
-        if (response.ok) {
-          if (!result.userId) {
-            toast.error("No user ID received from server");
-            setLoading(false);
-            return;
-          }
-
+        if (response.ok && result.userId) {
           toast.success("Login successful!");
           setTimeout(() => {
-            router.push(`/Acculog/Attendance/Dashboard?id=${encodeURIComponent(result.userId)}`);
-          }, 1000);
+            router.push(
+              `/Acculog/Attendance/Dashboard?id=${encodeURIComponent(result.userId)}`
+            );
+          }, 800);
         } else {
           toast.error(result.message || "Login failed!");
         }
-      } catch (error) {
-        console.error("Login error:", error);
+      } catch {
         toast.error("An error occurred while logging in!");
       } finally {
         setLoading(false);
@@ -67,103 +61,77 @@ const Login: React.FC = () => {
       toast.error("WebAuthn is not supported in this browser.");
       return;
     }
-
-    const storedCredentialId = localStorage.getItem("credentialId");
-    const storedEmail = localStorage.getItem("email");
-
-    if (!storedCredentialId || !storedEmail) {
-      toast.error("No registered fingerprint or email found.");
-      return;
-    }
-
-    try {
-      const credentialRequestOptions: PublicKeyCredentialRequestOptions = {
-        challenge: new Uint8Array(32), // Ideally from backend
-        timeout: 60000,
-        rpId: window.location.hostname,
-        userVerification: "preferred",
-        allowCredentials: [
-          {
-            id: Uint8Array.from(atob(storedCredentialId), c => c.charCodeAt(0)),
-            type: "public-key",
-            transports: ["internal"],
-          },
-        ],
-      };
-
-      const assertion = await navigator.credentials.get({
-        publicKey: credentialRequestOptions,
-      }) as PublicKeyCredential;
-
-      if (assertion) {
-        // Send both email and credentialId to backend
-        const response = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            Email: storedEmail,
-            credentialId: storedCredentialId,
-          }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.userId) {
-          toast.success("Fingerprint login successful!");
-          router.push(`/Acculog/Attendance/Dashboard?id=${encodeURIComponent(result.userId)}`);
-        } else {
-          toast.error(result.message || "Fingerprint login failed.");
-        }
-      } else {
-        toast.error("Fingerprint verification failed.");
-      }
-    } catch (error) {
-      console.error("Fingerprint verification error:", error);
-      toast.error("Fingerprint login failed or cancelled.");
-    }
+    toast.info("Fingerprint login feature coming soon!");
   };
 
-
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 transition-colors bg-gradient-to-br from-black via-gray-900 to-black duration-300">
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#00ffcc33_1px,transparent_1px)] bg-[size:40px_40px] z-0" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
       <ToastContainer className="text-xs" />
-      <div className="relative z-10 w-full max-w-md p-8 bg-white backdrop-blur-lg rounded-lg shadow-lg">
+
+      <div className="relative z-10 w-full max-w-md p-8 bg-white shadow-lg rounded-2xl border border-gray-200">
+        {/* Logo */}
         <div className="flex flex-col items-center mb-6 text-center">
-          <Image src="/acculog.png" alt="Pantsin" width={400} height={100} className="mb-4 rounded-md" />
-          <p className="text-xs mt-2 max-w-sm text-black font-bold"> Please use the given username and
-            password to access the system.</p>
+          <Image
+            src="/acculog.png"
+            alt="Acculog Logo"
+            width={220}
+            height={60}
+            className="mb-3 rounded-md"
+          />
+          <p className="text-xs text-gray-500 font-medium">
+            Time & Attendance Tracking
+          </p>
         </div>
+
+        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={Email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border-b text-xs text-black"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={Password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border-b text-xs text-black"
-          />
-          <button type="submit" disabled={loading}
-            className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 hover:scale-[1.02] text-white font-semibold text-xs rounded-lg transition-all duration-300 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
-          >{loading ? 'Signing In...' : 'Sign In'}
+          {/* Email */}
+          <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 shadow-sm border border-gray-200">
+            <FiMail className="text-cyan-600" />
+            <input
+              type="email"
+              placeholder="Email"
+              value={Email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-sm text-gray-800"
+            />
+          </div>
+
+          {/* Password */}
+          <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 shadow-sm border border-gray-200">
+            <FiLock className="text-cyan-600" />
+            <input
+              type="password"
+              placeholder="Password"
+              value={Password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-sm text-gray-800"
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold text-sm rounded-lg transition-all duration-300 shadow-md hover:scale-[1.02] disabled:opacity-60"
+          >
+            {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
-        {/*<button
+        {/* Fingerprint Login */}
+        <button
           type="button"
           onClick={handleVerifyFingerprint}
-          className="mt-2 w-full py-3 border border-cyan-500 text-cyan-500 font-semibold text-xs rounded-lg hover:bg-cyan-50 transition-all duration-300"
+          className="mt-3 w-full py-3 border border-cyan-400 text-cyan-600 font-medium text-sm rounded-lg hover:bg-cyan-50 transition-all duration-300 flex items-center justify-center gap-2"
         >
-          Sign In with Fingerprint
-        </button>*/}
-        <p className="mt-4 text-xs text-center font-bold">Acculog - Attendance and Time Tracking System | IT Department</p>
+          <LuFingerprint size={16} /> Sign In with Fingerprint
+        </button>
+
+        {/* Footer */}
+        <p className="mt-4 text-[10px] text-center text-gray-400 font-medium">
+          Acculog © {new Date().getFullYear()} | Attendance & Time Tracking System
+        </p>
       </div>
     </div>
   );

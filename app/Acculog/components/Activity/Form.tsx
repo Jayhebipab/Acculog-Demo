@@ -195,24 +195,34 @@ const Form: React.FC<FormProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-[9998]" onClick={() => setShowForm(false)} />
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-opacity duration-300"
+        onClick={() => setShowForm(false)}
+      />
+
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-md relative p-6">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative p-6 animate-fadeIn">
+
+          {/* Close button */}
           <button
             onClick={() => setShowForm(false)}
-            className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-xs"
+            className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition-colors duration-200 text-lg"
           >
-            &#x2715;
+            &times;
           </button>
-          <form onSubmit={handleSubmit} className="space-y-3 text-xs">
-            <h3 className="text-sm font-semibold mb-2">{formData._id ? "Update Activity" : "Add Activity"}</h3>
 
+          <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+            <h3 className="text-base font-semibold text-gray-800 border-b pb-2">
+              {formData._id ? "✏️ Update Activity" : "➕ Add Activity"}
+            </h3>
+
+            {/* Type */}
             <div>
-              <label className="block mb-1">Type</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
               <select
-                className="w-full border-b border-gray-300 px-2 py-1 text-xs bg-white"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-black focus:outline-none transition-all"
                 value={formData.Type}
-                onChange={e => onChange("Type", e.target.value)}
+                onChange={(e) => onChange("Type", e.target.value)}
                 required
               >
                 <option value="">Select Type</option>
@@ -223,54 +233,45 @@ const Form: React.FC<FormProps> = ({
               </select>
             </div>
 
+            {/* Status */}
             <div>
-              <label className="block mb-1">Status</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
               <select
-                className="w-full border-b border-gray-300 px-2 py-1 text-xs bg-white"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-black focus:outline-none transition-all"
                 value={formData.Status}
-                onChange={e => onChange("Status", e.target.value)}
+                onChange={(e) => onChange("Type", e.target.value)}
                 required
-                disabled={!formData.Type}
               >
                 <option value="">Select Status</option>
-                {statusOptions.map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
+                <option value="Login">Login</option>
+                <option value="Logout">Logout</option>
               </select>
             </div>
 
+            {/* Location */}
             <div>
-              <label className="block mb-1">Location</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Location</label>
               <input
                 type="text"
                 value={locationAddress}
                 disabled
-                className="w-full border-b bg-white border-gray-300 px-2 py-1 text-xs"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs bg-gray-50"
               />
             </div>
 
-            <div className="flex gap-2">
-              <input
-                type="hidden"
-                value={latitude ?? ""}
-                disabled
-                placeholder="Latitude"
-                className="w-1/2 border-b bg-white border-gray-300 px-2 py-1 text-xs"
-              />
-              <input
-                type="hidden"
-                value={longitude ?? ""}
-                disabled
-                placeholder="Longitude"
-                className="w-1/2 border-b bg-white border-gray-300 px-2 py-1 text-xs"
-              />
+            {/* Hidden Lat/Lng */}
+            <input type="hidden" value={latitude ?? ""} />
+            <input type="hidden" value={longitude ?? ""} />
+
+            {/* Camera */}
+            <div className="mt-2">
+              <Camera onCapture={(img) => setCapturedImage(img)} />
             </div>
 
-            <Camera onCapture={(img) => setCapturedImage(img)} />
-
+            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-black text-white px-4 py-2 rounded text-xs mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm mt-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               disabled={
                 !formData.Type ||
                 !formData.Status ||
@@ -281,7 +282,11 @@ const Form: React.FC<FormProps> = ({
                 locationAddress === "Fetching location..."
               }
             >
-              {uploading ? "Uploading..." : formData._id ? "Update" : "Submit"}
+              {uploading
+                ? "⏳ Uploading..."
+                : formData._id
+                  ? "💾 Update"
+                  : "✅ Submit"}
             </button>
           </form>
         </div>

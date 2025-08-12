@@ -1,16 +1,13 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { LuFlipHorizontal } from "react-icons/lu";
 
 interface CameraProps {
-  /**
-   * Called with the base64/URL‑encoded photo after it is captured.
-   * Parent components can immediately submit/save this value.
-   */
   onCapture: (dataUrl: string) => void;
 }
 
-const COUNTDOWN_SECONDS = 4; // seconds before auto‑capture after tap
+const COUNTDOWN_SECONDS = 4;
 
 const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -19,11 +16,12 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
 
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
-  /* ---------------------------- Start the webcam ----------------------------- */
-  useEffect(() => {
+  /* ---------------------- Start the webcam ---------------------- */
+  const startCamera = (mode: "user" | "environment") => {
     navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: "user" } })
+      .getUserMedia({ video: { facingMode: mode } })
       .then((stream) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -33,36 +31,48 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
       .catch((err) => {
         console.error("Camera error:", err);
       });
+  };
+
+  useEffect(() => {
+    startCamera(facingMode);
 
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
     };
-  }, []);
+  }, [facingMode]);
 
-  /* ------------------------- Handle tap to start timer ----------------------- */
+  /* ------------------------- Flip camera ------------------------ */
+  const flipCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+    }
+    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+  };
+
+  /* -------------------- Handle tap countdown -------------------- */
   const handleTap = () => {
-    if (capturedImage) return; // already captured
+    if (capturedImage) return;
     if (countdown === null) {
       setCountdown(COUNTDOWN_SECONDS);
     }
   };
 
-  /* ---------------------------- Countdown logic ------------------------------ */
   useEffect(() => {
     if (countdown === null) return;
-
     if (countdown === 0) {
       capture();
       return;
     }
-
-    const timer = setTimeout(() => setCountdown((prev) => (prev! > 0 ? prev! - 1 : 0)), 1000);
+    const timer = setTimeout(
+      () => setCountdown((prev) => (prev! > 0 ? prev! - 1 : 0)),
+      1000
+    );
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  /* -------------------------------- Capture --------------------------------- */
+  /* ---------------------- Capture image ---------------------- */
   const capture = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
@@ -84,8 +94,15 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
     }
   };
 
+  /* ---------------------- Retake photo ---------------------- */
+  const retakePhoto = () => {
+    setCapturedImage(null);
+    setCountdown(null);
+    startCamera(facingMode);
+  };
+
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="w-full flex flex-col items-center gap-2">
       {!capturedImage && (
         <div
           className="relative w-full max-w-xs cursor-pointer"
@@ -97,7 +114,7 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
             autoPlay
             playsInline
             muted
-            className="w-full aspect-video shadow-lg border-2 border-green-700"
+            className="w-full aspect-video shadow-lg border-2 border-green-700 rounded-lg"
           />
 
           {countdown !== null && (
@@ -116,12 +133,29 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
         </div>
       )}
 
+      {!capturedImage && (
+        <button
+          type="button"
+          onClick={flipCamera}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2"
+        >
+          <LuFlipHorizontal size={20} />
+          <span>Flip Camera</span>
+        </button>
+      )}
+
       <canvas ref={canvasRef} className="hidden" />
 
       {capturedImage && (
         <div className="mt-4 w-full flex flex-col items-center">
-          <p className="mb-2 font-semibold">Captured Image (ready to submit):</p>
+          <p className="mb-2 font-semibold">Captured Image:</p>
           <img src={capturedImage} alt="Captured" className="w-full max-w-xs rounded shadow-md" />
+          <button
+            onClick={retakePhoto}
+            className="mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow"
+          >
+            Retake Photo
+          </button>
         </div>
       )}
     </div>

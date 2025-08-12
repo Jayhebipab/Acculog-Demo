@@ -28,6 +28,7 @@ export interface Post {
   Location?: string;
   Type?: string;
   Status?: string;
+  Email?: string;
   date_created?: string;
   DateVisited?: string | number; // optional
 }
@@ -35,6 +36,7 @@ export interface Post {
 export interface HistoryItem {
   Type: string;
   Status: string;
+  Email: string;
   date_created: string; // ISO string
 }
 
@@ -101,6 +103,7 @@ const MapCard: React.FC<Props> = ({ posts }) => {
       const historyEntry: HistoryItem = {
         Type: p.Type || "Unknown",
         Status: p.Status || "Unknown",
+        Email: p.Email || "Unknown",
         date_created: p.date_created
           ? new Date(p.date_created).toISOString()
           : "", // <-- dito 'yung pag-avoid ng default current date
