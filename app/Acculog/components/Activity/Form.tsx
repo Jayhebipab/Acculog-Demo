@@ -154,7 +154,8 @@ const Form: React.FC<FormProps> = ({
       />
 
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative p-6 animate-fadeIn">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative p-6 animate-fadeIn 
+                      max-h-[90vh] overflow-y-auto">
 
           {/* Close button */}
           <button
