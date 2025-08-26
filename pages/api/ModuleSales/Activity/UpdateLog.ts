@@ -13,9 +13,9 @@ export default async function updateActivityLog(
   }
 
   try {
-    const { _id, ReferenceID, Email, Type, Status } = req.body;
+    const { _id, ReferenceID, Email, Type, Status, Remarks } = req.body;
 
-    if (!_id || !ReferenceID || !Email || !Type || !Status) {
+    if (!_id || !ReferenceID || !Email || !Type || !Status || !Remarks) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -30,6 +30,7 @@ export default async function updateActivityLog(
           Email,
           Type,
           Status,
+          Remarks,
           updatedAt: new Date(),
         },
       }

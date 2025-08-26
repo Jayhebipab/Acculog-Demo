@@ -10,6 +10,7 @@ interface ActivityLog {
   Location: string;
   date_created: string;
   PhotoURL?: string;
+  Remarks: string;
   _id?: string;
 }
 
@@ -146,6 +147,7 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
                 <th className="px-6 py-4 font-semibold">⏰ Remarks</th>
                 <th className="px-6 py-4 font-semibold">📍 Location</th>
                 <th className="px-6 py-4 font-semibold">📅 Date &amp; Time</th>
+                 <th className="px-6 py-4 font-semibold">📌 Description</th>
                 <th className="px-6 py-4 font-semibold">🖼 View Image</th>
               </tr>
             </thead>
@@ -186,6 +188,7 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
                       </td>
                       <td className="px-6 py-4 text-xs capitalize">{log.Location}</td>
                       <td className="px-6 py-4 text-xs">{formatDateTime(log.date_created)}</td>
+                      <td className="px-6 py-4 text-xs capitalize">{log.Remarks}</td>
                       <td className="px-6 py-4 text-xs">
                         {log.PhotoURL ? (
                           <a

@@ -18,6 +18,7 @@ interface FormData {
     Type: string;
     Status: string;
     _id?: string;
+    Remarks: string;
     date_created?: string;
 }
 
@@ -46,6 +47,7 @@ const ListofUser: React.FC = () => {
         Email: "",
         Type: "",
         Status: "",
+        Remarks: "",
     });
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -128,6 +130,7 @@ const ListofUser: React.FC = () => {
             Type: log.Type,
             Status: log.Status,
             _id: log._id || "",
+            Remarks: log.Remarks || "",
             date_created: log.date_created || "",
         });
         openFormWithAnimation();

@@ -21,6 +21,7 @@ export default async function addActivityLog(
       Latitude,
       Longitude,
       PhotoURL,
+      Remarks,
     } = req.body;
 
     /* 🔒 Basic validation */
@@ -37,6 +38,7 @@ export default async function addActivityLog(
       Email,
       Type,
       Status,
+      Remarks,
       date_created: new Date(),
     };
 

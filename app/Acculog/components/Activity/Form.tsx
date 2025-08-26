@@ -8,6 +8,7 @@ interface FormData {
   Type: string;
   Status: string;
   PhotoURL?: string;
+  Remarks: string
   _id?: string;
 }
 
@@ -134,6 +135,7 @@ const Form: React.FC<FormProps> = ({
         Type: "",
         Status: "",
         PhotoURL: "",
+        Remarks: "",
         _id: undefined,
       });
       setShowForm(false);
@@ -180,9 +182,7 @@ const Form: React.FC<FormProps> = ({
                 required
               >
                 <option value="">Select Type</option>
-                <option value="HR Attendance">HR Attendance</option>
                 <option value="On Field">On Field</option>
-                <option value="Site Visit">Site Visit</option>
                 <option value="On Site">On Site</option>
               </select>
             </div>
@@ -198,8 +198,21 @@ const Form: React.FC<FormProps> = ({
               >
                 <option value="">Select Status</option>
                 <option value="Login">Login</option>
-                <option value="Logout">Logout</option> 
+                <option value="Logout">Logout</option>
               </select>
+            </div>
+
+            {/* Remarks */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Remarks/Status</label>
+              <textarea
+                value={formData.Remarks}
+                onChange={(e) => onChange("Remarks", e.target.value)} // ✅ dito
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs bg-gray-50"
+                rows={5}
+              />
+
+
             </div>
 
             {/* Location */}
