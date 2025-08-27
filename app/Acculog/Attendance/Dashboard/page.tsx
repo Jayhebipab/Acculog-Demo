@@ -53,6 +53,7 @@ function DashboardContent() {
     Type: string;
     Status: string;
     _id?: string;
+    Remarks: string;
     date_created?: string;
   }
 
@@ -86,6 +87,7 @@ function DashboardContent() {
     Email: "",
     Type: "",
     Status: "",
+    Remarks: "",
   });
 
   const fetchAccount = async () => {
