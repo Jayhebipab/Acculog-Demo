@@ -1,17 +1,59 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from 'next/link';
-// Route
+import Link from "next/link";
+import { CiMemoPad } from "react-icons/ci";
 import SidebarMenu from "./SidebarMenu";
-import getMenuItems from "./SidebarMenuItems";
 import SidebarUserInfo from "./SidebarUserInfo";
 
-const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void; isDarkMode: boolean; }> = ({ isOpen, onClose, isDarkMode }) => {
+interface SubItem {
+  title: string;
+  description: string;
+  href: string;
+}
+
+interface MenuItem {
+  title: string;
+  icon: React.ComponentType<any>;
+  subItems: SubItem[];
+}
+
+interface UserDetails {
+  Firstname: string;
+  Lastname: string;
+  Location: string;
+  Role: string;
+  Position: string;
+  Company: string;
+  Status: string;
+  profilePicture: string;
+  ReferenceID: string;
+  Department: string;
+}
+
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isDarkMode: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isDarkMode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [userId, setUserId] = useState<string | null>(null);
-  const [userDetails, setUserDetails] = useState({ Firstname: "", Lastname: "", Location: "", Role: "", Position: "", Company: "", Status: "", profilePicture: "", ReferenceID: "", Department: "" });
+  const [userDetails, setUserDetails] = useState<UserDetails>({
+    Firstname: "",
+    Lastname: "",
+    Location: "",
+    Role: "",
+    Position: "",
+    Company: "",
+    Status: "",
+    profilePicture: "",
+    ReferenceID: "",
+    Department: "",
+  });
+
   const [pendingInquiryCount, setPendingInquiryCount] = useState(0);
   const [pendingInactiveCount, setPendingInactiveCount] = useState(0);
   const [pendingDeleteCount, setPendingDeleteCount] = useState(0);
@@ -25,14 +67,13 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void; isDarkMode: bool
   useEffect(() => {
     const fetchUserDetails = async () => {
       if (!userId) return;
-
       try {
         const response = await fetch(`/api/user?id=${encodeURIComponent(userId)}`);
         if (!response.ok) throw new Error("Failed to fetch user details");
 
         const data = await response.json();
         setUserDetails({
-          Firstname: data.Firstname || "Leroux ",
+          Firstname: data.Firstname || "Leroux",
           Lastname: data.Lastname || "Xchire",
           Location: data.Location || "Philippines",
           Role: data.Role || "Admin",
@@ -41,7 +82,7 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void; isDarkMode: bool
           Department: data.Department || "",
           Status: data.Status || "None",
           ReferenceID: data.ReferenceID,
-          profilePicture: data.profilePicture,
+          profilePicture: data.profilePicture || "",
         });
       } catch (error) {
         console.error("Error fetching user details:", error);
@@ -51,84 +92,88 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void; isDarkMode: bool
     fetchUserDetails();
   }, [userId]);
 
-  const toggleSidebar = () => {
-    setCollapsed(!collapsed);
+  const toggleSidebar = () => setCollapsed(!collapsed);
+  const handleToggle = (section: string) =>
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+
+  // 🔹 Build menu items with Timekeeping filter
+  const getMenuItems = (userDetails: UserDetails, userId: string | null = ""): MenuItem[] => {
+    const items: MenuItem[] = [
+      {
+        title: "Activities",
+        icon: CiMemoPad,
+        subItems: [
+          {
+            title: "Activity Logs",
+            description: "View your recent activity records and task updates",
+            href: `/Acculog/Attendance/Activity/ActivityLogs${userId ? `?id=${encodeURIComponent(userId)}` : ""}`,
+          },
+          {
+            title: "Timekeeping",
+            description: "View your recent activity records and task updates",
+            href: `/Acculog/Attendance/Activity/Timekeeping${userId ? `?id=${encodeURIComponent(userId)}` : ""}`,
+          },
+        ],
+      },
+    ];
+
+    return items.map((item) => {
+      const filteredSubItems = item.subItems.filter((sub) => {
+        if (sub.title === "Timekeeping") {
+          return userDetails.Role === "Super Admin" || userDetails.Department === "Human Resources";
+        }
+        return true;
+      });
+      return { ...item, subItems: filteredSubItems };
+    });
   };
 
-  const handleToggle = (section: string) => {
-    setOpenSections((prevSections: any) => ({
-      ...prevSections,
-      [section]: !prevSections[section],
-    }));
-  };
-
-  const menuItems = getMenuItems(userId);
-
-  const filteredMenuItems = (() => {
-    const role = userDetails.Role;
-    
-    return menuItems.filter(item =>
-      [
-        "Activities",
-        "Dashboard",
-      ].includes(item.title)
-    );
-
-
-    return [];
-  })();
+  const menuItems = getMenuItems(userDetails, userId);
 
   return (
     <>
-      {/* Overlay Background (Closes Sidebar on Click) */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={onClose}
-        ></div>
-      )}
+      {/* Overlay */}
+      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose}></div>}
 
-      {/* Sidebar Container */}
+      {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-50 h-screen transition-all duration-300 flex flex-col
-      ${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"} 
-      ${collapsed ? "w-16" : "w-64"} 
-      ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        ${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"} 
+        ${collapsed ? "w-16" : "w-64"} 
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
-        {/* Logo Section */}
+        {/* Logo */}
         <div className="flex items-center justify-between p-5">
           <div className="flex items-center">
             <img src="/fluxx.png" alt="Logo" className="h-8 mr-2 rounded-full" />
             <Link href={`/Acculog/Attendance/Dashboard${userId ? `?id=${encodeURIComponent(userId)}` : ''}`}>
               <h1 className={`text-md font-bold transition-opacity ${collapsed ? "opacity-0" : "opacity-100"}`}>
-                <span>AccuLog</span>
+                AccuLog
               </h1>
             </Link>
           </div>
         </div>
 
-        {/* Menu Section */}
+        {/* Menu */}
         <SidebarMenu
           collapsed={collapsed}
           openSections={openSections}
           handleToggle={handleToggle}
-          menuItems={filteredMenuItems}
+          menuItems={menuItems}
           userId={userId}
           pendingInquiryCount={pendingInquiryCount}
           pendingInactiveCount={pendingInactiveCount}
           pendingDeleteCount={pendingDeleteCount}
         />
 
-        {/* User Details Section */}
+        {/* User Info */}
         {!collapsed && (
-          <div className="text-xs text-left">
-            <SidebarUserInfo
-              collapsed={collapsed}
-              userDetails={userDetails}
-              agentMode={agentMode}
-              setAgentMode={setAgentMode}
-            />
-          </div>
+          <SidebarUserInfo
+            collapsed={collapsed}
+            userDetails={userDetails}
+            agentMode={agentMode}
+            setAgentMode={setAgentMode}
+          />
         )}
       </div>
     </>

@@ -136,6 +136,7 @@ const ListofUser: React.FC = () => {
         openFormWithAnimation();
     };
 
+    // 🔹 Filter posts based on role/department
     const filteredByReference = posts.filter((post) => {
         const matchReferenceID =
             post?.referenceid === userDetails.ReferenceID ||
@@ -143,8 +144,10 @@ const ListofUser: React.FC = () => {
         return matchReferenceID;
     });
 
-    // After filtering, apply descending sort by date_created
-    const allVisibleAccounts = userDetails.Department === "Human Resources" ? posts : filteredByReference;
+    const allVisibleAccounts =
+        userDetails.Role === "Super Admin" || userDetails.Department === "Human Resources"
+            ? posts
+            : filteredByReference;
 
     const filteredAccounts = allVisibleAccounts
         .filter((post) => {
@@ -167,11 +170,7 @@ const ListofUser: React.FC = () => {
 
             return matchesSearch && matchesType && matchesDate;
         })
-        .sort(
-            (a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime()
-        );
-
-
+        .sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
 
     // Reset page to 1 on filter/search change
     useEffect(() => {
@@ -237,7 +236,19 @@ const ListofUser: React.FC = () => {
 
                                 <div className="mb-4 p-4 bg-white shadow-md rounded-lg text-gray-900">
                                     <h2 className="text-lg font-bold mb-2">Activity Logs</h2>
-                                    <button onClick={openFormWithAnimation} aria-label="Add Activity" title="Add Activity" className="bg-green-700 hover:bg-green-800 text-white shadow-md mb-4 rounded p-2 text-xs whitespace-nowrap hidden sm:inline-block">Create Activity</button>
+
+                                    {/* 🔹 Show Create button only for Super Admin and HR */}
+                                    {(userDetails.Role === "Super Admin" || userDetails.Department === "Human Resources") && (
+                                        <button
+                                            onClick={openFormWithAnimation}
+                                            aria-label="Add Activity"
+                                            title="Add Activity"
+                                            className="bg-green-700 hover:bg-green-800 text-white shadow-md mb-4 rounded p-2 text-xs whitespace-nowrap"
+                                        >
+                                            Create Activity
+                                        </button>
+                                    )}
+
                                     <Filter
                                         searchQuery={searchQuery}
                                         setSearchQuery={setSearchQuery}
@@ -248,6 +259,7 @@ const ListofUser: React.FC = () => {
                                         endDate={endDate}
                                         setEndDate={setEndDate}
                                     />
+
                                     {/* Table with paginated data */}
                                     <Table data={paginatedData} onEdit={handleEdit} department={userDetails.Department} />
 
