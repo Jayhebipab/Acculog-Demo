@@ -282,19 +282,6 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                                     <LuCloudDownload size={20} />
                                     Download
                                 </button>
-                                <button
-                                    onClick={() =>
-                                        handleQrExport(
-                                            filteredLogs,
-                                            `${logs[0].Firstname}_${logs[0].Lastname}_Logs`,
-                                            email
-                                        )
-                                    }
-                                    className="bg-purple-600 text-white px-3 py-2 rounded text-xs w-full sm:w-auto hover:bg-purple-700 flex items-center gap-1 justify-center"
-                                >
-                                    <LuQrCode size={20} />
-                                    Scan
-                                </button>
                             </div>
 
                             {/* Modal */}
