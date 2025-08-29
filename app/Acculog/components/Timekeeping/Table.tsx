@@ -243,7 +243,8 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                     return (
                         <div
                             key={email}
-                            className="bg-white shadow-lg rounded-xl p-5 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300"
+                            className="shadow-lg rounded-xl p-5 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300 bg-cover bg-no-repeat bg-center"
+                            style={{ backgroundImage: "url('/bg.png')" }}
                         >
                             {/* User Info */}
                             <div className="flex items-center gap-4 mb-4">
