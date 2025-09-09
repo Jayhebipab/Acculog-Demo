@@ -342,10 +342,17 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
 
             if (res.ok) {
                 const data = await res.json();
-                return `${window.location.origin}${data.url}`;
+                if (typeof window !== "undefined") {
+                    // ✅ only runs on the client
+                    return `${window.location.origin}${data.url}`;
+                } else {
+                    // fallback for server-side
+                    return data.url;
+                }
             } else {
                 throw new Error("Upload failed");
             }
+
         } catch (err) {
             console.error("Upload failed, using Blob URL fallback:", err);
             return URL.createObjectURL(blob);
