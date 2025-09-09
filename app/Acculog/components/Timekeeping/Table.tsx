@@ -9,7 +9,7 @@ import LogModal from "./Modal/Log";
 import CalendarModal from "./Modal/Calendar";
 import { LuCloudDownload, LuLogs, LuCalendarClock } from "react-icons/lu";
 import Card from "./Tab/Card";
-
+import CardTable from "./Tab/CardTable";
 
 export interface ActivityLog {
     ReferenceID: string;
@@ -471,144 +471,19 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             )}
 
             {activeTab === "table" && (
-                <div className="overflow-x-auto w-full rounded-lg shadow-md border border-gray-200">
-                    <table className="w-full table-auto border-collapse">
-                        <thead className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white sticky top-0 z-10 shadow">
-                            <tr className="text-xs text-left whitespace-nowrap">
-                                <th className="px-6 py-4 font-semibold">Fullname</th>
-                                <th className="px-6 py-4 font-semibold">Email</th>
-                                <th className="px-6 py-4 font-semibold">Department</th>
-                                <th className="px-6 py-4 font-semibold">Late</th>
-                                <th className="px-6 py-4 font-semibold">Overtime</th>
-                                <th className="px-6 py-4 font-semibold">Undertime</th>
-                                <th className="px-6 py-4 font-semibold">Invalid Time</th>
-                                <th className="px-6 py-4 font-semibold">Days ( Late )</th>
-                                <th className="px-6 py-4 font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredData.map(([email, logs]) => {
-                                const fullname = `${logs[0].Firstname || ""} ${logs[0].Lastname || ""}`.trim();
-                                const filteredLogs = filterByDate(logs);
-
-                                // Totals
-                                let totalLateMs = 0;
-                                let totalOvertimeMs = 0;
-                                let totalUndertimeMs = 0;
-                                let totalInvalidMs = 0;
-
-                                const lateDaysSet = new Set<string>(); // 🔹 Track unique late dates
-
-                                filteredLogs.forEach((log) => {
-                                    const remarks = computeRemarks(log);
-                                    const logDate = new Date(log.date_created);
-
-                                    const startOfDay = new Date(logDate);
-                                    startOfDay.setHours(8, 0, 0, 0);
-
-                                    const endOfDay = new Date(logDate);
-                                    endOfDay.setHours(17, 0, 0, 0);
-
-                                    const invalidStart = new Date(logDate);
-                                    invalidStart.setHours(14, 0, 0, 0);
-
-                                    if (remarks.startsWith("Late")) {
-                                        totalLateMs += logDate.getTime() - startOfDay.getTime();
-
-                                        // 🔹 Add unique day (YYYY-MM-DD format)
-                                        const dayKey = logDate.toISOString().split("T")[0];
-                                        lateDaysSet.add(dayKey);
-                                    } else if (remarks.startsWith("Overtime")) {
-                                        totalOvertimeMs += logDate.getTime() - endOfDay.getTime();
-                                    } else if (remarks.startsWith("Undertime")) {
-                                        totalUndertimeMs += endOfDay.getTime() - logDate.getTime();
-                                    } else if (remarks.startsWith("Invalid")) {
-                                        totalInvalidMs += logDate.getTime() - invalidStart.getTime();
-                                    }
-                                });
-
-                                const lateDays = lateDaysSet.size;
-
-                                return (
-                                    <tr key={email} className="whitespace-nowrap hover:bg-blue-50">
-                                        <td className="px-6 py-4 text-xs capitalize">{fullname}</td>
-                                        <td className="px-6 py-4 text-xs">{email}</td>
-                                        <td className="px-6 py-4 text-xs">{logs[0].Department}</td>
-                                        <td className="px-6 py-4 text-xs">
-                                            {totalLateMs > 0 ? formatDuration(totalLateMs) : "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-xs">
-                                            {totalOvertimeMs > 0 ? formatDuration(totalOvertimeMs) : "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-xs">
-                                            {totalUndertimeMs > 0 ? formatDuration(totalUndertimeMs) : "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-xs">
-                                            {totalInvalidMs > 0 ? formatDuration(totalInvalidMs) : "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-xs text-center font-medium text-red-700">
-                                            {lateDays > 0
-                                                ? lateDays >= 6
-                                                    ? `${lateDays} (For Memo)`
-                                                    : lateDays
-                                                : "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-xs flex gap-2">
-                                            {/* 🔹 View Logs */}
-                                            <button
-                                                onClick={() => setOpenModal(email)}
-                                                className="bg-blue-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1"
-                                            >
-                                                <LuLogs size={16} />
-                                                View
-                                            </button>
-                                            {/* 🔹 Calendar */}
-                                            <button
-                                                onClick={() => setOpenCalendar(email)}
-                                                className="bg-purple-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1"
-                                            >
-                                                <LuCalendarClock size={16} />
-                                                Calendar
-                                            </button>
-                                            <CalendarModal
-                                                isOpen={openCalendar === email}
-                                                logs={filteredLogs}
-                                                onClose={() => setOpenCalendar(null)}
-                                            />
-
-
-
-                                            {/* 🔹 Download Excel */}
-                                            <button
-                                                onClick={() =>
-                                                    handleExportExcel(
-                                                        filteredLogs,
-                                                        `${logs[0].Firstname}_${logs[0].Lastname}_Logs`
-                                                    )
-                                                }
-                                                className="bg-green-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1"
-                                            >
-                                                <LuCloudDownload size={16} />
-                                                Download
-                                            </button>
-
-                                            {/* 🔹 Modal (same as cards) */}
-                                            <LogModal
-                                                isOpen={openModal === email}
-                                                logs={filteredLogs}
-                                                onClose={() => setOpenModal(null)}
-                                                formatDate={formatDate}
-                                                computeRemarks={computeRemarks}
-                                            />
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                <CardTable
+                    filteredData={filteredData}
+                    setOpenModal={setOpenModal}
+                    openModal={openModal}
+                    setOpenCalendar={setOpenCalendar}
+                    openCalendar={openCalendar}
+                    filterByDate={filterByDate}
+                    handleExportExcel={handleExportExcel}
+                    computeRemarks={computeRemarks}
+                    formatDate={formatDate}
+                    formatDuration={formatDuration}
+                />
             )}
-
 
         </div>
 
