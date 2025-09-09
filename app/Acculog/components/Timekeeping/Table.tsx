@@ -34,12 +34,12 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
     const [endDate, setEndDate] = useState<string>("");
     const [openModal, setOpenModal] = useState<string | null>(null);
 
-    const [qrModal, setQrModal] = useState<string | null>(null); // track which user QR is open
+    const [qrModal, setQrModal] = useState<string | null>(null);
     const [qrData, setQrData] = useState<string | null>(null);
     const [qrLoading, setQrLoading] = useState(false);
 
     const handleQrExport = async (logs: any[], filename: string, email: string) => {
-        setQrModal(email); // open modal agad
+        setQrModal(email);
         setQrLoading(true);
         const url = await handleExportExcel(logs, filename);
         setQrData(url);
@@ -54,7 +54,16 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             day: "numeric",
             hour: "numeric",
             minute: "2-digit",
+            second: "2-digit",
         });
+
+    // 🔹 Format duration helper
+    const formatDuration = (ms: number) => {
+        const hours = Math.floor(ms / (1000 * 60 * 60));
+        const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+        return `${hours}h ${minutes}m ${seconds}s`;
+    };
 
     // 🔹 Compute remarks (Late or Overtime)
     const computeRemarks = (log: ActivityLog) => {
@@ -65,26 +74,21 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
         startOfDay.setHours(8, 0, 0, 0);
 
         const endOfDay = new Date(logDate);
-        endOfDay.setHours(17, 30, 0, 0);
+        endOfDay.setHours(17, 0, 0, 0); // ✅ Overtime starts 5:00 PM
 
         let diffMs = 0;
         let label = "";
 
         if (log.Status.toLowerCase() === "login" && logDate > startOfDay) {
-            // late
             diffMs = logDate.getTime() - startOfDay.getTime();
             label = "Late";
         } else if (log.Status.toLowerCase() === "logout" && logDate > endOfDay) {
-            // overtime
             diffMs = logDate.getTime() - endOfDay.getTime();
             label = "Overtime";
         }
 
         if (diffMs > 0) {
-            const hours = Math.floor(diffMs / (1000 * 60 * 60));
-            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-            return `${label}: ${hours}h ${minutes}m ${seconds}s`;
+            return `${label}: ${formatDuration(diffMs)}`;
         }
 
         return "On Time";
@@ -104,13 +108,12 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             const fullname = `${log.Firstname || ""} ${log.Lastname || ""}`.trim();
             const remarks = computeRemarks(log);
 
-            // 🔹 Compute total Late & Overtime
             const logDate = new Date(log.date_created);
             const startOfDay = new Date(logDate);
             startOfDay.setHours(8, 0, 0, 0);
 
             const endOfDay = new Date(logDate);
-            endOfDay.setHours(17, 30, 0, 0);
+            endOfDay.setHours(17, 0, 0, 0); // ✅ Overtime starts 5:00 PM
 
             if (log.Status.toLowerCase() === "login" && logDate > startOfDay) {
                 totalLateMs += logDate.getTime() - startOfDay.getTime();
@@ -128,30 +131,19 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             ]);
         });
 
-        // 🔹 Helper: Format ms → h m s
-        const formatDuration = (ms: number) => {
-            const hours = Math.floor(ms / (1000 * 60 * 60));
-            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-            return `${hours}h ${minutes}m ${seconds}s`;
-        };
-
         // 🔹 Append totals row
         sheet.addRow([]);
         sheet.addRow(["", "TOTALS"]);
         sheet.addRow(["", "Total Late", formatDuration(totalLateMs)]);
         sheet.addRow(["", "Total Overtime", formatDuration(totalOvertimeMs)]);
 
-        // 🔹 Generate Excel buffer
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {
             type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
 
-        // ✅ Local download (browser save)
         saveAs(blob, `${filename}.xlsx`);
 
-        // ✅ Upload to backend for QR Code download
         try {
             const formData = new FormData();
             formData.append("file", blob, `${filename}.xlsx`);
@@ -163,14 +155,12 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
 
             if (res.ok) {
                 const data = await res.json();
-                return `${window.location.origin}${data.url}`; // ✅ Public URL (for QR code)
+                return `${window.location.origin}${data.url}`;
             } else {
                 throw new Error("Upload failed");
             }
         } catch (err) {
             console.error("Upload failed, using Blob URL fallback:", err);
-
-            // 🔹 fallback: use Blob URL (temporary, not shareable across devices)
             return URL.createObjectURL(blob);
         }
     };
@@ -213,7 +203,9 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
 
     if (Object.keys(groupedByEmail).length === 0) {
         return (
-            <p className="text-gray-400 text-center mt-4">No activity logs found.</p>
+            <p className="text-gray-400 text-center mt-4">
+                No activity logs found.
+            </p>
         );
     }
 
@@ -257,8 +249,12 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                                     <p className="font-semibold text-sm truncate capitalize">
                                         {logs[0].Firstname || ""} {logs[0].Lastname || ""}
                                     </p>
-                                    <p className="text-xs text-gray-500 truncate">{logs[0].Department}</p>
-                                    <p className="text-xs text-gray-400 truncate">{email}</p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                        {logs[0].Department}
+                                    </p>
+                                    <p className="text-xs text-gray-400 truncate">
+                                        {email}
+                                    </p>
                                 </div>
                             </div>
 

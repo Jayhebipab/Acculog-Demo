@@ -16,11 +16,16 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
 
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
 
-  const startCamera = (mode: "user" | "environment") => {
+  const startCamera = (deviceId?: string) => {
+    const constraints: MediaStreamConstraints = {
+      video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "user" },
+    };
+
     navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: mode } })
+      .getUserMedia(constraints)
       .then((stream) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -32,27 +37,31 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
       });
   };
 
+  // Get camera devices
   useEffect(() => {
-    // Start with default camera on mount only
-    startCamera(facingMode);
-
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
+    navigator.mediaDevices.enumerateDevices().then((allDevices) => {
+      const videoDevices = allDevices.filter((d) => d.kind === "videoinput");
+      setDevices(videoDevices);
+      if (videoDevices.length > 0) {
+        setSelectedDeviceId(videoDevices[0].deviceId); // default to first camera
       }
-    };
-  }, []); // empty deps, run once
+    });
+  }, []);
 
-  const flipCamera = () => {
-    const newMode = facingMode === "user" ? "environment" : "user";
-
-    // Stop current stream
+  // Start/restart camera when device changes
+  useEffect(() => {
+    if (!selectedDeviceId) return;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
     }
+    startCamera(selectedDeviceId);
+  }, [selectedDeviceId]);
 
-    setFacingMode(newMode);
-    startCamera(newMode);
+  const flipCamera = () => {
+    if (devices.length < 2) return; // nothing to flip
+    const currentIndex = devices.findIndex((d) => d.deviceId === selectedDeviceId);
+    const nextIndex = (currentIndex + 1) % devices.length;
+    setSelectedDeviceId(devices[nextIndex].deviceId);
   };
 
   const handleTap = () => {
@@ -68,7 +77,10 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
       capture();
       return;
     }
-    const timer = setTimeout(() => setCountdown((prev) => (prev! > 0 ? prev! - 1 : 0)), 1000);
+    const timer = setTimeout(
+      () => setCountdown((prev) => (prev! > 0 ? prev! - 1 : 0)),
+      1000
+    );
     return () => clearTimeout(timer);
   }, [countdown]);
 
@@ -96,11 +108,26 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
   const retakePhoto = () => {
     setCapturedImage(null);
     setCountdown(null);
-    startCamera(facingMode);
+    if (selectedDeviceId) startCamera(selectedDeviceId);
   };
 
   return (
     <div className="w-full flex flex-col items-center gap-2">
+      {/* Camera selector */}
+      {!capturedImage && devices.length > 0 && (
+        <select
+          value={selectedDeviceId || ""}
+          onChange={(e) => setSelectedDeviceId(e.target.value)}
+          className="mb-2 border px-2 py-1 rounded"
+        >
+          {devices.map((d, idx) => (
+            <option key={d.deviceId} value={d.deviceId}>
+              {d.label || `Camera ${idx + 1}`}
+            </option>
+          ))}
+        </select>
+      )}
+
       {!capturedImage && (
         <div
           className="relative w-full max-w-xs cursor-pointer"
@@ -131,7 +158,7 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
         </div>
       )}
 
-      {!capturedImage && (
+      {!capturedImage && devices.length > 1 && (
         <button
           type="button"
           onClick={flipCamera}

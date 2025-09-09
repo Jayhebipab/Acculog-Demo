@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -34,25 +36,42 @@ const formatDateTime = (dateStr: string | null): string => {
   });
 };
 
+// 🔹 Helper to format ms → h m s
+const formatDuration = (ms: number): string => {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0) parts.push(`${seconds}s`);
+
+  return parts.length > 0 ? parts.join(" ") : "0s";
+};
+
+// 🔹 Compute Late / OT with formatted duration
 const computeTimeRemarks = (log: ActivityLog): string => {
   const logDate = new Date(log.date_created);
   const workStart = new Date(log.date_created);
   workStart.setHours(8, 0, 0, 0);
+
   const workEndGrace = new Date(log.date_created);
-  workEndGrace.setHours(17, 10, 0, 0);
+  workEndGrace.setHours(17, 0, 0, 0); // ✅ 5:00 PM exact
 
   if (log.Status.toLowerCase() === "login") {
     if (logDate > workStart) {
-      const lateMinutes = Math.round((logDate.getTime() - workStart.getTime()) / 60000);
-      return `Late by ${lateMinutes} min`;
+      const lateMs = logDate.getTime() - workStart.getTime();
+      return `Late by ${formatDuration(lateMs)}`;
     }
     return "On Time";
   }
 
   if (log.Status.toLowerCase() === "logout") {
     if (logDate > workEndGrace) {
-      const overtimeMinutes = Math.round((logDate.getTime() - workEndGrace.getTime()) / 60000);
-      return `OT +${overtimeMinutes} min`;
+      const overtimeMs = logDate.getTime() - workEndGrace.getTime();
+      return `OT +${formatDuration(overtimeMs)}`;
     }
     return "On Time";
   }
@@ -108,14 +127,18 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
       {/* Tabs */}
       <div className="flex border-b mb-4">
         <button
-          className={`px-4 py-2 text-xs font-medium ${activeTab === "table" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+          className={`px-4 py-2 text-xs font-medium ${activeTab === "table"
+            ? "border-b-2 border-blue-600 text-blue-600"
+            : "text-gray-600"
             }`}
           onClick={() => setActiveTab("table")}
         >
           Table View
         </button>
         <button
-          className={`px-4 py-2 text-xs font-medium ${activeTab === "card" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+          className={`px-4 py-2 text-xs font-medium ${activeTab === "card"
+            ? "border-b-2 border-blue-600 text-blue-600"
+            : "text-gray-600"
             }`}
           onClick={() => setActiveTab("card")}
         >
@@ -141,19 +164,19 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
           <table className="w-full table-auto border-collapse">
             <thead className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white sticky top-0 z-10 shadow">
               <tr className="text-xs text-left whitespace-nowrap">
-                <th className="px-6 py-4 font-semibold">📧 User Email</th>
+                <th className="px-6 py-4 font-semibold">📅 Date &amp; Time</th>
                 <th className="px-6 py-4 font-semibold">📌 Type</th>
                 <th className="px-6 py-4 font-semibold">📊 Status</th>
                 <th className="px-6 py-4 font-semibold">⏰ Remarks</th>
+                <th className="px-6 py-4 font-semibold">📧 User Email</th>
                 <th className="px-6 py-4 font-semibold">📍 Location</th>
-                <th className="px-6 py-4 font-semibold">📅 Date &amp; Time</th>
-                 <th className="px-6 py-4 font-semibold">📌 Description</th>
+                <th className="px-6 py-4 font-semibold">📌 Description</th>
                 <th className="px-6 py-4 font-semibold">🖼 View Image</th>
               </tr>
             </thead>
             <tbody>
               {data.length > 0 ? (
-                data.map((log, idx) => {
+                data.map((log: ActivityLog, idx: number) => {
                   const remark = computeTimeRemarks(log);
                   const remarkColor = getRemarkBadgeColor(remark);
 
@@ -169,7 +192,7 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
                       className={`whitespace-nowrap hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                         }`}
                     >
-                      <td className="px-6 py-4 text-xs">{log.Email}</td>
+                      <td className="px-6 py-4 text-xs">{formatDateTime(log.date_created)}</td>
                       <td className="px-6 py-4 text-xs capitalize">{log.Type}</td>
                       <td className="px-6 py-4 text-xs capitalize">
                         <span
@@ -186,8 +209,8 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
                           {remarkIcon} {remark}
                         </span>
                       </td>
+                      <td className="px-6 py-4 text-xs">{log.Email}</td>
                       <td className="px-6 py-4 text-xs capitalize">{log.Location}</td>
-                      <td className="px-6 py-4 text-xs">{formatDateTime(log.date_created)}</td>
                       <td className="px-6 py-4 text-xs capitalize">{log.Remarks}</td>
                       <td className="px-6 py-4 text-xs">
                         {log.PhotoURL ? (
@@ -223,7 +246,7 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
       {activeTab === "card" && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.length > 0 ? (
-            data.map((log, idx) => {
+            data.map((log: ActivityLog, idx: number) => {
               const remark = computeTimeRemarks(log);
               const remarkColor = getRemarkBadgeColor(remark);
 
@@ -301,7 +324,6 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
           )}
         </div>
       )}
-
     </div>
   );
 };
