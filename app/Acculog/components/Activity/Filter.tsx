@@ -52,9 +52,7 @@ const Filter: React.FC<FilterProps> = ({
           onChange={(e) => setFilterType(e.target.value)}
         >
           <option value="">All Types</option>
-          <option value="HR Attendance">HR Attendance</option>
           <option value="On Field">On Field</option>
-          <option value="Site Visit">Site Visit</option>
           <option value="On Site">On Site</option>
         </select>
       </div>

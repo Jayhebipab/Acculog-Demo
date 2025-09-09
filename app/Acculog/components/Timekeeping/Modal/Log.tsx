@@ -57,12 +57,12 @@ const LogModal: React.FC<LogModalProps> = ({
                 </button>
 
                 <div className="border-b pb-2 mb-4 flex-shrink-0">
-                    <h3 className="text-md font-semibold truncate">
+                    <h3 className="text-md font-semibold capitalize truncate">
                         {logs[0].Firstname} {logs[0].Lastname} - Activity Logs
                     </h3>
                 </div>
 
-                <div className="bg-gray-100 rounded-lg p-3 mb-4 text-sm flex flex-col gap-1">
+                <div className="bg-gray-100 rounded-lg p-3 mb-4 text-xs flex flex-col gap-1">
                     <p className="text-red-600 font-medium">
                         Total Late: {formatDuration(totalLateMs)}
                     </p>
@@ -84,11 +84,11 @@ const LogModal: React.FC<LogModalProps> = ({
                                     new Date(b.date_created).getTime()
                             )
                             .map((log, idx) => {
-                                let badgeColor = "bg-gray-300 text-gray-800 text-xs";
+                                let badgeColor = "bg-gray-300 text-gray-800 text-[10px]";
                                 if (log.Status.toLowerCase() === "login")
-                                    badgeColor = "bg-green-200 text-green-800 text-xs";
+                                    badgeColor = "bg-green-200 text-green-800 text-[10px]";
                                 else if (log.Status.toLowerCase() === "logout")
-                                    badgeColor = "bg-red-200 text-red-800 text-xs";
+                                    badgeColor = "bg-red-200 text-red-800 text-[10px]";
 
                                 return (
                                     <div
@@ -106,7 +106,7 @@ const LogModal: React.FC<LogModalProps> = ({
                                         <span
                                             className={`px-2 py-0.5 rounded-full font-semibold ${badgeColor}`}
                                         >
-                                            {log.Status}
+                                            {log.Status} | {log.Type}
                                         </span>
                                     </div>
                                 );

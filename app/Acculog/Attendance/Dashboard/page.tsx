@@ -156,13 +156,19 @@ function DashboardContent() {
       const inRange =
         (!startDate || (d && d >= new Date(startDate))) &&
         (!endDateWithOffset || (d && d < endDateWithOffset));
+
       const isHR = userDetails.Department === "Human Resources";
+      const isSuperAdmin = userDetails.Role === "Super Admin";
+
       const matchID =
         p.referenceid === userDetails.ReferenceID ||
         p.ReferenceID === userDetails.ReferenceID;
-      return inRange && (isHR || matchID);
+
+      // ✅ Super Admin and HR see all, others see only their own
+      return inRange && (isSuperAdmin || isHR || matchID);
     })
     .sort((a, b) => +new Date(b.date_created) - +new Date(a.date_created));
+
 
   const chartData = Object.entries(
     filteredAccounts.reduce<Record<string, number>>((acc, p) => {
@@ -212,9 +218,8 @@ function DashboardContent() {
           {/* Form Overlay */}
           {showForm && (
             <div
-              className={`fixed inset-0 flex items-center justify-center z-[9999] p-4 bg-black/50 backdrop-blur-sm transition-all duration-500 ${
-                animateForm ? "opacity-100 scale-100" : "opacity-0 scale-95"
-              }`}
+              className={`fixed inset-0 flex items-center justify-center z-[9999] p-4 bg-black/50 backdrop-blur-sm transition-all duration-500 ${animateForm ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
             >
               <Form
                 formData={form}
