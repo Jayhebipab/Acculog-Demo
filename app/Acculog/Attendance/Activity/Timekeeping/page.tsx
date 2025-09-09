@@ -157,8 +157,6 @@ const ListofUser: React.FC = () => {
                             </p>
                             <Table
                                 groupedByEmail={groupedByEmail}
-                                expandedUsers={expandedUsers}
-                                toggleUserLogs={toggleUserLogs}
                             />
                             <ToastContainer />
                         </div>
