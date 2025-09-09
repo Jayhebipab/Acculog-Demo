@@ -1,12 +1,39 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { LuLogs, LuCalendarClock, LuCloudDownload, LuMapPinCheck } from "react-icons/lu";
-import LogModal from "../Modal/Log";
-import CalendarModal from "../Modal/Calendar";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { LuLogs, LuCalendarClock, LuCloudDownload, LuMapPinCheck } from "react-icons/lu";
+import LogModal from "../Modal/Log";
+import CalendarModal from "../Modal/Calendar";
+
+// Only run Leaflet code on client
+const isClient = typeof window !== "undefined";
+
+// FitBounds helper
+const FitBounds: React.FC<{ coords: { lat: number; lng: number }[] }> = ({ coords }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (coords.length > 0) {
+      const bounds = L.latLngBounds(coords.map((c) => [c.lat, c.lng]));
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [coords, map]);
+  return null;
+};
+
+const defaultMarker = isClient
+  ? new L.Icon({
+      iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+      iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    })
+  : undefined;
 
 interface CardTableProps {
   filteredData: [string, any[]][];
@@ -21,32 +48,6 @@ interface CardTableProps {
   formatDuration: (ms: number) => string;
 }
 
-// Component to auto-fit map bounds to markers
-const FitBounds: React.FC<{ coords: { lat: number; lng: number }[] }> = ({ coords }) => {
-  const map = useMap();
-  useEffect(() => {
-    if (coords.length > 0) {
-      const bounds = L.latLngBounds(coords.map((c) => [c.lat, c.lng]));
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [coords, map]);
-  return null;
-};
-
-// Standard Leaflet marker
-const defaultMarker = new L.Icon({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
 const CardTable: React.FC<CardTableProps> = ({
   filteredData,
   setOpenModal,
@@ -60,7 +61,9 @@ const CardTable: React.FC<CardTableProps> = ({
   formatDuration,
 }) => {
   const [openMap, setOpenMap] = useState<string | null>(null);
-  const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number; name: string }[] | null>(null);
+  const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number; name: string }[]>([]);
+
+  if (!isClient) return null; // Prevent server-side rendering
 
   return (
     <div className="overflow-x-auto w-full rounded-lg shadow-md border border-gray-200">
@@ -83,10 +86,10 @@ const CardTable: React.FC<CardTableProps> = ({
             const fullname = `${logs[0].Firstname || ""} ${logs[0].Lastname || ""}`.trim();
             const filteredLogs = filterByDate(logs);
 
-            let totalLateMs = 0;
-            let totalOvertimeMs = 0;
-            let totalUndertimeMs = 0;
-            let totalInvalidMs = 0;
+            let totalLateMs = 0,
+              totalOvertimeMs = 0,
+              totalUndertimeMs = 0,
+              totalInvalidMs = 0;
             const lateDaysSet = new Set<string>();
 
             filteredLogs.forEach((log) => {
@@ -158,7 +161,6 @@ const CardTable: React.FC<CardTableProps> = ({
                     <LuCloudDownload size={16} /> Download
                   </button>
 
-                  {/* Map Button */}
                   <button
                     onClick={() => {
                       const locations = filteredLogs
@@ -191,7 +193,7 @@ const CardTable: React.FC<CardTableProps> = ({
       </table>
 
       {/* Map Modal */}
-      {mapCoords && openMap && (
+      {mapCoords.length > 0 && openMap && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
           <div className="bg-white w-11/12 md:w-4/5 h-[90vh] rounded-lg shadow-lg p-4 relative">
             <button
@@ -201,7 +203,7 @@ const CardTable: React.FC<CardTableProps> = ({
               ✕
             </button>
             <MapContainer
-              center={mapCoords[0] ? [mapCoords[0].lat, mapCoords[0].lng] : [0, 0]}
+              center={[mapCoords[0].lat, mapCoords[0].lng]}
               zoom={16}
               className="w-full h-full rounded"
             >

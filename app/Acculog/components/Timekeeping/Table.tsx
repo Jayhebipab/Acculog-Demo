@@ -5,11 +5,11 @@ import ExcelJS from "exceljs";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import Filters from "./Filters";
-import LogModal from "./Modal/Log";
-import CalendarModal from "./Modal/Calendar";
-import { LuCloudDownload, LuLogs, LuCalendarClock } from "react-icons/lu";
 import Card from "./Tab/Card";
-import CardTable from "./Tab/CardTable";
+import dynamic from "next/dynamic";
+
+// Dynamic import, disable SSR
+const CardTable = dynamic(() => import("./Tab/CardTable"), { ssr: false });
 
 export interface ActivityLog {
     ReferenceID: string;
@@ -484,6 +484,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                     formatDuration={formatDuration}
                 />
             )}
+
 
         </div>
 
