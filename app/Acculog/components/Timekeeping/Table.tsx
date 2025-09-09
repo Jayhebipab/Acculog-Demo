@@ -124,116 +124,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
     };
 
     // 🔹 Export ALL as ZIP
-    const handleExportAll = async () => {
-        const zip = new JSZip();
-
-        for (const [email, logs] of Object.entries(groupedByEmail)) {
-            const filteredLogs = filterByDate(logs);
-
-            if (filteredLogs.length === 0) continue;
-
-            const workbook = new ExcelJS.Workbook();
-            const sheet = workbook.addWorksheet("Logs");
-
-            // ✅ New header
-            sheet.addRow([
-                "Date",
-                "Fullname",
-                "Status",
-                "Type",
-                "Department",
-                "Late",
-                "Overtime",
-                "Undertime",
-                "Halfday",
-                "Invalid",
-            ]);
-
-            let totalLateMs = 0;
-            let totalOvertimeMs = 0;
-            let totalUndertimeMs = 0;
-            let totalInvalidMs = 0;
-            let totalHalfday = 0;
-
-            filteredLogs.forEach((log) => {
-                const fullname = `${log.Firstname || ""} ${log.Lastname || ""}`.trim();
-                const remarks = computeRemarks(log);
-
-                const logDate = new Date(log.date_created);
-
-                // standard refs
-                const startOfDay = new Date(logDate);
-                startOfDay.setHours(8, 0, 0, 0);
-
-                const endOfDay = new Date(logDate);
-                endOfDay.setHours(17, 0, 0, 0);
-
-                const invalidStart = new Date(logDate);
-                invalidStart.setHours(14, 0, 0, 0);
-
-                let late = "";
-                let overtime = "";
-                let undertime = "";
-                let halfday = "";
-                let invalid = "";
-
-                if (remarks.startsWith("Late")) {
-                    late = formatDuration(logDate.getTime() - startOfDay.getTime());
-                    totalLateMs += logDate.getTime() - startOfDay.getTime();
-                } else if (remarks.startsWith("Overtime")) {
-                    overtime = formatDuration(logDate.getTime() - endOfDay.getTime());
-                    totalOvertimeMs += logDate.getTime() - endOfDay.getTime();
-                } else if (remarks.startsWith("Undertime")) {
-                    undertime = formatDuration(endOfDay.getTime() - logDate.getTime());
-                    totalUndertimeMs += endOfDay.getTime() - logDate.getTime();
-                } else if (remarks.startsWith("Halfday")) {
-                    halfday = "Yes";
-                    totalHalfday += 1;
-                } else if (remarks.startsWith("Invalid")) {
-                    invalid = formatDuration(logDate.getTime() - invalidStart.getTime());
-                    totalInvalidMs += logDate.getTime() - invalidStart.getTime();
-                }
-
-                sheet.addRow([
-                    formatDate(log.date_created),
-                    fullname,
-                    log.Status,
-                    log.Type,
-                    log.Department,
-                    late,
-                    overtime,
-                    undertime,
-                    halfday,
-                    invalid,
-                ]);
-            });
-
-            // 🔹 Append totals
-            sheet.addRow([]);
-            sheet.addRow(["", "TOTALS"]);
-            if (totalLateMs > 0) sheet.addRow(["", "Total Late", formatDuration(totalLateMs)]);
-            if (totalOvertimeMs > 0) sheet.addRow(["", "Total Overtime", formatDuration(totalOvertimeMs)]);
-            if (totalUndertimeMs > 0) sheet.addRow(["", "Total Undertime", formatDuration(totalUndertimeMs)]);
-            if (totalHalfday > 0) sheet.addRow(["", "Total Halfday", totalHalfday]);
-            if (totalInvalidMs > 0) sheet.addRow(["", "Total Invalid", formatDuration(totalInvalidMs)]);
-
-            // 🔹 Save buffer per user Excel
-            const buffer = await workbook.xlsx.writeBuffer();
-
-            const startLabel = startDate ? startDate.replace(/-/g, "_") : "Start";
-            const endLabel = endDate ? endDate.replace(/-/g, "_") : "End";
-            const filename = `${logs[0].Firstname}_${logs[0].Lastname}_Timekeeping_${startLabel}_${endLabel}.xlsx`;
-
-            zip.file(filename, buffer);
-        }
-
-        const startLabel = startDate ? startDate.replace(/-/g, "_") : "Start";
-        const endLabel = endDate ? endDate.replace(/-/g, "_") : "End";
-        const zipFilename = `Timekeeping_${startLabel}_${endLabel}.zip`;
-
-        const content = await zip.generateAsync({ type: "blob" });
-        saveAs(content, zipFilename);
-    };
+    
 
     // 🔹 Export SINGLE Excel
     const handleExportExcel = async (logs: ActivityLog[], filename: string) => {
@@ -420,7 +311,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                 setEndDateAction={setEndDate}
                 departments={departments}
                 allLogs={allLogs}
-                handleExportExcelAction={handleExportAll}
+                handleExportExcelAction={handleExportExcel}
                 filterByDateAction={filterByDate}
             />
 
