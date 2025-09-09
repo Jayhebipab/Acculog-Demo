@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     icon: "/fluxx.png",
   },
   manifest: "/manifest.json",
-  themeColor: "#0f766e",
+  // themeColor removed
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0f766e" />
+        {/* meta theme-color removed */}
       </head>
       <body className={`${inter.variable} font-sans antialiased relative`}>
         <ToastContainer />

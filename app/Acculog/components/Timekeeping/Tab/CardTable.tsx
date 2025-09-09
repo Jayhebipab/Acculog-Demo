@@ -8,7 +8,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-interface TableProps {
+interface CardTableProps {
   filteredData: [string, any[]][];
   setOpenModal: React.Dispatch<React.SetStateAction<string | null>>;
   openModal: string | null;
@@ -47,7 +47,7 @@ const defaultMarker = new L.Icon({
   shadowSize: [41, 41],
 });
 
-const Table: React.FC<TableProps> = ({
+const CardTable: React.FC<CardTableProps> = ({
   filteredData,
   setOpenModal,
   openModal,
@@ -223,4 +223,4 @@ const Table: React.FC<TableProps> = ({
   );
 };
 
-export default Table;
+export default CardTable;
