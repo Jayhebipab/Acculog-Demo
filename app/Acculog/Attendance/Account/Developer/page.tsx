@@ -14,7 +14,8 @@ const ProfilePage: React.FC = () => {
     const [userDetails, setUserDetails] = useState({ id: "", Firstname: "", Lastname: "", Email: "", Role: "", });
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-
+    
+    // Fetch User Information
     useEffect(() => {
         const fetchUserData = async () => {
             const params = new URLSearchParams(window.location.search);
@@ -54,7 +55,7 @@ const ProfilePage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-1">
                         <h1 className="text-lg font-bold mb-4">Developers Team</h1>
                         {error && <div className="text-red-500 mb-4">{error}</div>}
-                        {/* Use ProfileForm component here */}
+                        {/* Developer Form */}
                         <Developers />
                     </div>
                 </div>

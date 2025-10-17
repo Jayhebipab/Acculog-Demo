@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+// Root
 import ParentLayout from "../../../components/Layouts/ParentLayout";
 import SessionChecker from "../../../components/Session/SessionChecker";
+// Fetch
 import UserFetcher from "../../../components/User/UserFetcher";
+// Routes
 import Table from "../../../components/Timekeeping/Table";
+// Toast Notifications
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -49,8 +53,8 @@ const ListofUser: React.FC = () => {
     });
     const [loading, setLoading] = useState(true);
     const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
-
-    // Fetch current user details
+    
+    // Fetch User Information
     useEffect(() => {
         const fetchUserData = async () => {
             const params = new URLSearchParams(window.location.search);
@@ -82,8 +86,8 @@ const ListofUser: React.FC = () => {
         };
         fetchUserData();
     }, []);
-
-    // Fetch all users
+    
+    // Fetch Users
     const fetchUsers = async () => {
         try {
             const response = await fetch("/api/fetchuser");
@@ -95,7 +99,7 @@ const ListofUser: React.FC = () => {
         }
     };
 
-    // Fetch activity logs
+    // Fetch Activity Logs
     const fetchLogs = async () => {
         try {
             const res = await fetch("/api/ModuleSales/Activity/FetchLog");
@@ -113,7 +117,7 @@ const ListofUser: React.FC = () => {
         setLoading(false);
     }, []);
 
-    // Map posts to user info
+    // Filter by User
     const postsWithUserInfo = posts.map((post) => {
         const matchedUser = users.find((u) => u.Email === post.Email);
         return {
@@ -125,13 +129,12 @@ const ListofUser: React.FC = () => {
         };
     });
 
-    // Filter visible posts
+    // Filter by Role
     const visiblePosts =
         userDetails.Role === "Super Admin" || userDetails.Department === "Human Resources"
             ? postsWithUserInfo
             : postsWithUserInfo.filter((p) => p.ReferenceID === userDetails.ReferenceID);
 
-    // Group by email
     const groupedByEmail: Record<string, ActivityLog[]> = {};
     visiblePosts.forEach((log) => {
         if (!groupedByEmail[log.Email]) groupedByEmail[log.Email] = [];
@@ -155,11 +158,15 @@ const ListofUser: React.FC = () => {
                                 This section provides an overview of employee attendance, including login, logout, late arrivals, and overtime records.
                                 Use the filters to narrow down logs by department, employee, or date range, and export detailed reports for reference.
                             </p>
+
+                            {/* Table */}
                             <Table
                                 groupedByEmail={groupedByEmail}
                                 expandedUsers={expandedUsers}
                                 toggleUserLogs={toggleUserLogs}
                             />
+
+                            {/* Table */}
                             <ToastContainer />
                         </div>
                     )}

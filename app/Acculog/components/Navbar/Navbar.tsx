@@ -29,19 +29,16 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onToggleTheme, isDarkM
   const notificationRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
-  // Handle clicks outside sidebar to close it
   useEffect(() => {
     const handleClickOutsideSidebar = (event: MouseEvent) => {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        // You had local state showSidebar but it was not used here,
-        // so consider removing or managing sidebar state outside Navbar
       }
     };
     document.addEventListener("mousedown", handleClickOutsideSidebar);
     return () => document.removeEventListener("mousedown", handleClickOutsideSidebar);
   }, []);
 
-  // Sync dark mode class and localStorage
+  // Dark Mode 
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
@@ -52,7 +49,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onToggleTheme, isDarkM
     }
   }, [isDarkMode]);
 
-  // Fetch user data from URL param on mount
+  // Fetch User
   useEffect(() => {
     const fetchUserData = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -77,14 +74,13 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onToggleTheme, isDarkM
     fetchUserData();
   }, []);
 
-  // Handle clicks outside dropdowns to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        // Close dropdown logic here if dropdown state is added in future
+      if (dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node)) {
       }
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        // Close notifications logic here if notifications state is added
+      if (notificationRef.current && 
+        !notificationRef.current.contains(event.target as Node)) {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);

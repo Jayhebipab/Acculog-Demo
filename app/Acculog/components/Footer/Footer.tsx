@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+// Icons
 import { FaArrowUp } from "react-icons/fa";
 
 type FooterProps = {
@@ -10,7 +11,8 @@ type FooterProps = {
 
 const Footer: React.FC<FooterProps> = ({systemStatus = "operational" }) => {
   const [showButton, setShowButton] = useState(false);
-
+  
+  // Scroll
   useEffect(() => {
     const handleScroll = () => {
       setShowButton(window.scrollY > 300);
@@ -19,7 +21,8 @@ const Footer: React.FC<FooterProps> = ({systemStatus = "operational" }) => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
+   
+  // Back to Top
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

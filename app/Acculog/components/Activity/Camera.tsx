@@ -7,6 +7,7 @@ interface CameraProps {
   onCapture: (dataUrl: string) => void;
 }
 
+// Count Down
 const COUNTDOWN_SECONDS = 4;
 
 const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
@@ -18,7 +19,8 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
-
+  
+  // Start Camera when click
   const startCamera = (deviceId?: string) => {
     const constraints: MediaStreamConstraints = {
       video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "user" },
@@ -43,7 +45,7 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
       const videoDevices = allDevices.filter((d) => d.kind === "videoinput");
       setDevices(videoDevices);
       if (videoDevices.length > 0) {
-        setSelectedDeviceId(videoDevices[0].deviceId); // default to first camera
+        setSelectedDeviceId(videoDevices[0].deviceId);
       }
     });
   }, []);
@@ -63,14 +65,16 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
     const nextIndex = (currentIndex + 1) % devices.length;
     setSelectedDeviceId(devices[nextIndex].deviceId);
   };
-
+  
+  // Tap Function
   const handleTap = () => {
     if (capturedImage) return;
     if (countdown === null) {
       setCountdown(COUNTDOWN_SECONDS);
     }
   };
-
+  
+  // Fetch
   useEffect(() => {
     if (countdown === null) return;
     if (countdown === 0) {
@@ -83,7 +87,8 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
     );
     return () => clearTimeout(timer);
   }, [countdown]);
-
+  
+  // Capture Images
   const capture = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
@@ -104,7 +109,8 @@ const CameraCaptureOnTap: React.FC<CameraProps> = ({ onCapture }) => {
       streamRef.current.getTracks().forEach((t) => t.stop());
     }
   };
-
+  
+  // Retake Photo
   const retakePhoto = () => {
     setCapturedImage(null);
     setCountdown(null);

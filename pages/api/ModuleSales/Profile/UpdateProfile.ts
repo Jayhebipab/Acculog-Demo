@@ -20,7 +20,7 @@ export default async function updateProfile(req: NextApiRequest, res: NextApiRes
     ContactNumber,
     Password,
     profilePicture,
-    FingerprintKey,  // <-- add FingerprintKey here
+    FingerprintKey,
   } = req.body;
 
   if (!id) {
@@ -52,7 +52,7 @@ export default async function updateProfile(req: NextApiRequest, res: NextApiRes
     }
 
     if (FingerprintKey && FingerprintKey.trim() !== "") {
-      updatedUser.FingerprintKey = FingerprintKey; // <-- update fingerprint key
+      updatedUser.FingerprintKey = FingerprintKey;
     }
 
     const result = await userCollection.updateOne(

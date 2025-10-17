@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+// Root
 import ParentLayout from "../../../components/Layouts/ParentLayout";
 import SessionChecker from "../../../components/Session/SessionChecker";
+// Fetch
 import UserFetcher from "../../../components/User/UserFetcher";
+// Routes
 import Form from "../../../components/Activity/Form";
 import Table from "../../../components/Activity/Table";
 import Filter from "../../../components/Activity/Filter";
 import Pagination from "../../../components/Activity/Pagination";
-
+// Toast Notification
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -54,11 +57,10 @@ const ListofUser: React.FC = () => {
     const [filterType, setFilterType] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-
-    // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    // Fetch User Information
     useEffect(() => {
         const fetchUserData = async () => {
             const params = new URLSearchParams(window.location.search);
@@ -97,7 +99,8 @@ const ListofUser: React.FC = () => {
 
         fetchUserData();
     }, []);
-
+    
+    // Fetch Function
     const fetchAccount = async () => {
         setLoading(true);
         try {
@@ -115,14 +118,17 @@ const ListofUser: React.FC = () => {
     useEffect(() => {
         fetchAccount();
     }, []);
-
+    
+    // Handle Form
     const handleFormChange = (field: string, value: string) => {
         setForm((prev) => ({
             ...prev,
             [field]: value,
         }));
     };
+    
 
+    // Edit Function
     const handleEdit = (log: FormData) => {
         setForm({
             ReferenceID: log.ReferenceID,
@@ -136,19 +142,21 @@ const ListofUser: React.FC = () => {
         openFormWithAnimation();
     };
 
-    // 🔹 Filter posts based on role/department
+    // Filter by Reference ID 
     const filteredByReference = posts.filter((post) => {
         const matchReferenceID =
             post?.referenceid === userDetails.ReferenceID ||
             post?.ReferenceID === userDetails.ReferenceID;
         return matchReferenceID;
     });
-
+    
+    // Filter by Role
     const allVisibleAccounts =
         userDetails.Role === "Super Admin" || userDetails.Department === "Human Resources"
             ? posts
             : filteredByReference;
-
+    
+    // Search Bar and Date Range        
     const filteredAccounts = allVisibleAccounts
         .filter((post) => {
             const search = searchQuery.toLowerCase();
@@ -164,7 +172,7 @@ const ListofUser: React.FC = () => {
             }
             if (endDate) {
                 const end = new Date(endDate);
-                end.setDate(end.getDate() + 1); // Include full end date
+                end.setDate(end.getDate() + 1);
                 matchesDate = matchesDate && new Date(post.date_created) < end;
             }
 
@@ -172,12 +180,10 @@ const ListofUser: React.FC = () => {
         })
         .sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
 
-    // Reset page to 1 on filter/search change
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery, filterType, startDate, endDate]);
 
-    // Pagination calculations
     const totalItems = filteredAccounts.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const paginatedData = filteredAccounts.slice(
@@ -185,12 +191,14 @@ const ListofUser: React.FC = () => {
         currentPage * itemsPerPage
     );
 
+    // Pagination
     const goToPage = (page: number) => {
         if (page < 1) page = 1;
         else if (page > totalPages) page = totalPages;
         setCurrentPage(page);
     };
-
+    
+    // Refetch ReferenceID
     useEffect(() => {
         if (userDetails.ReferenceID && userDetails.Email) {
             setForm((prev) => ({
@@ -200,8 +208,8 @@ const ListofUser: React.FC = () => {
             }));
         }
     }, [userDetails.ReferenceID, userDetails.Email]);
-
-    // Form animation helpers
+     
+    // Animation
     const openFormWithAnimation = () => {
         setShowForm(true);
         setTimeout(() => setAnimateForm(true), 10);
@@ -218,11 +226,12 @@ const ListofUser: React.FC = () => {
                     {(user) => (
                         <div className="container mx-auto p-4 text-gray-900">
                             <div className="grid grid-cols-1 md:grid-cols-1">
-                                {/* Animated form overlay */}
+
                                 {showForm && (
                                     <div
                                         className={`fixed inset-0 flex items-center justify-center z-[9999] p-4 bg-black bg-opacity-50 transition-opacity duration-300 ${animateForm ? "opacity-100" : "opacity-0"}`}
-                                    >
+                                    >   
+                                        {/* Form */}
                                         <Form
                                             formData={form}
                                             onChange={handleFormChange}
@@ -236,8 +245,8 @@ const ListofUser: React.FC = () => {
 
                                 <div className="mb-4 p-4 bg-white shadow-md rounded-lg text-gray-900">
                                     <h2 className="text-lg font-bold mb-2">Activity Logs</h2>
-
-                                    {/* 🔹 Show Create button only for Super Admin and HR */}
+                                    
+                                    {/* Filter Role Button */}
                                     {(userDetails.Role === "Super Admin" || userDetails.Department === "Human Resources") && (
                                         <button
                                             onClick={openFormWithAnimation}
@@ -248,6 +257,8 @@ const ListofUser: React.FC = () => {
                                             Create Activity
                                         </button>
                                     )}
+
+                                    {/* Filter */}
 
                                     <Filter
                                         searchQuery={searchQuery}
@@ -260,9 +271,11 @@ const ListofUser: React.FC = () => {
                                         setEndDate={setEndDate}
                                     />
 
-                                    {/* Table with paginated data */}
-                                    <Table data={paginatedData} onEdit={handleEdit} department={userDetails.Department} />
+                                    {/* Table */}
 
+                                    <Table data={paginatedData} onEdit={handleEdit} department={userDetails.Department} />
+                                    
+                                    {/* Pagination */}
                                     <Pagination
                                         currentPage={currentPage}
                                         totalPages={totalPages}
@@ -276,6 +289,7 @@ const ListofUser: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Toast */}
                             <ToastContainer className="text-xs" autoClose={1000} />
                         </div>
                     )}

@@ -1,17 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+// Leaflet
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+// Icons
 import { LuLogs, LuCalendarClock, LuCloudDownload, LuMapPinCheck } from "react-icons/lu";
+// Routes
 import LogModal from "../Modal/Log";
 import CalendarModal from "../Modal/Calendar";
 
-// Only run Leaflet code on client
 const isClient = typeof window !== "undefined";
 
-// FitBounds helper
+// Bounds
 const FitBounds: React.FC<{ coords: { lat: number; lng: number }[] }> = ({ coords }) => {
   const map = useMap();
   useEffect(() => {
@@ -23,6 +25,7 @@ const FitBounds: React.FC<{ coords: { lat: number; lng: number }[] }> = ({ coord
   return null;
 };
 
+// Marker
 const defaultMarker = isClient
   ? new L.Icon({
       iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -63,8 +66,7 @@ const CardTable: React.FC<CardTableProps> = ({
   const [openMap, setOpenMap] = useState<string | null>(null);
   const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number; name: string }[]>([]);
 
-  if (!isClient) return null; // Prevent server-side rendering
-
+  if (!isClient) return null;
   return (
     <div className="overflow-x-auto w-full rounded-lg shadow-md border border-gray-200">
       <table className="w-full table-auto border-collapse">

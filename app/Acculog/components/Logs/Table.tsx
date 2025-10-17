@@ -12,18 +12,13 @@ interface SessionTableProps {
   data: SessionLog[];
 }
 
+// Time Format in Philippines 
 const formatDateTime = (dateStr: string): string => {
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return "Invalid date";
   return date.toLocaleString();
 };
 
-/**
- * Mobile‑first responsive session‑log list.
- *
- * ▸ On small screens (< md) logs are shown in a card‑like list for easier reading / tapping.
- * ▸ On medium+ screens a traditional table is displayed.
- */
 const SessionTable: React.FC<SessionTableProps> = ({ data }) => {
   if (data.length === 0) {
     return (
@@ -40,7 +35,6 @@ const SessionTable: React.FC<SessionTableProps> = ({ data }) => {
 
   return (
     <>
-      {/* ────────── mobile list (< md) */}
       <ul className="space-y-2 md:hidden">
         {data.map((log, idx) => (
           <li
@@ -62,8 +56,7 @@ const SessionTable: React.FC<SessionTableProps> = ({ data }) => {
           </li>
         ))}
       </ul>
-
-      {/* ────────── desktop table (≥ md) */}
+      
       <div className="hidden w-full overflow-x-auto md:block">
         <table className="min-w-full table-fixed text-left text-xs">
           <thead className="bg-gray-100">

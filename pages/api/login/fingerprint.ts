@@ -33,8 +33,6 @@ export default async function handler(
       return res.status(401).json({ error: "Invalid fingerprint key" });
     }
 
-    // You might want to generate a session or JWT here, omitted for simplicity
-
     return res.status(200).json({ userId: user._id.toString(), message: "Login successful" });
   } catch (error) {
     console.error("Fingerprint login error:", error);

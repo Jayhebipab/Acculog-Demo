@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode } from "react";
-// Components
+// Routes
 import Sidebar from "../Sidebar/Sidebar";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
 import { Roboto } from "next/font/google";
 
-// Load Roboto font with weights 400 & 700 (adjust as needed)
+// Roboto
 const roboto = Roboto({
   weight: ["400", "700"],
   subsets: ["latin"],

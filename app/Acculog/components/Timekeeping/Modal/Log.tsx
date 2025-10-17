@@ -38,7 +38,8 @@ const LogModal: React.FC<LogModalProps> = ({
             totalOvertimeMs += logDate.getTime() - endOfDay.getTime();
         }
     });
-
+    
+    // Format Duration 
     const formatDuration = (ms: number) => {
         const hours = Math.floor(ms / (1000 * 60 * 60));
         const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));

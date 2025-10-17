@@ -5,7 +5,6 @@ import { LuLogs, LuCloudDownload } from "react-icons/lu";
 import LogModal from "../Modal/Log";
 import QRModal from "../Modal/QR";
 
-// 🔹 Directly declare ActivityLog type dito
 export interface ActivityLog {
   ReferenceID: string;
   Email: string;

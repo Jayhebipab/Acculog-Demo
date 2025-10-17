@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
+// Crop
 import Cropper from "react-easy-crop";
 
 interface PictureProps {
@@ -21,7 +22,8 @@ const Picture: React.FC<PictureProps> = ({
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
     const [croppedImage, setCroppedImage] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-
+    
+    // Handle File and Images
     const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
@@ -31,6 +33,7 @@ const Picture: React.FC<PictureProps> = ({
         }
     };
 
+    // Drag and Drop
     const onDrop = async (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -41,11 +44,13 @@ const Picture: React.FC<PictureProps> = ({
             e.dataTransfer.clearData();
         }
     };
-
+    
+    // Crop
     const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
         setCroppedAreaPixels(croppedAreaPixels);
     }, []);
-
+    
+    // Preview Image Crop
     const showCroppedImage = useCallback(async () => {
         try {
             if (!imageSrc || !croppedAreaPixels) return;
@@ -63,7 +68,8 @@ const Picture: React.FC<PictureProps> = ({
     const onCancelCrop = () => {
         setImageSrc(null);
     };
-
+    
+    // Drag
     const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
     };
@@ -117,6 +123,7 @@ const Picture: React.FC<PictureProps> = ({
             {imageSrc && (
                 <div className="w-full bg-gray-100 rounded-md p-4">
                     <div className="relative w-full h-64 rounded-md overflow-hidden">
+                        {/* Crop */}
                         <Cropper
                             image={imageSrc}
                             crop={crop}
@@ -180,6 +187,7 @@ const Picture: React.FC<PictureProps> = ({
 
 export default Picture;
 
+// Read File
 function readFile(file: File): Promise<string> {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -188,6 +196,7 @@ function readFile(file: File): Promise<string> {
     });
 }
 
+// Url to File Conversion
 function dataURLtoFile(dataurl: string, filename: string) {
     const arr = dataurl.split(",");
     const mime = arr[0].match(/:(.*?);/)![1];
@@ -200,6 +209,7 @@ function dataURLtoFile(dataurl: string, filename: string) {
     return new File([u8arr], filename, { type: mime });
 }
 
+// Editing Images
 async function getCroppedImg(
     imageSrc: string,
     pixelCrop: { width: number; height: number; x: number; y: number },

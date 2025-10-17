@@ -6,7 +6,7 @@ interface HistoryItem {
   Type: string;
   Status: string;
   date_created: string;
-  Email?: string; // added email field
+  Email?: string;
 }
 
 interface LocWithDist {

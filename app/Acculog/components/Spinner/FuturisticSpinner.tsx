@@ -9,7 +9,7 @@ const FuturisticSpinner: React.FC<FuturisticSpinnerProps> = ({ setShowSpinner })
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSpinner(false);
-    }, 2000); // Shorter delay for faster perceived load
+    }, 2000); 
 
     return () => clearTimeout(timer);
   }, [setShowSpinner]);

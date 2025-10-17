@@ -9,12 +9,6 @@ interface FilterProps {
   setEndDate: (value: string) => void;
 }
 
-/**
- * Mobile‑first date‑range filter.
- *
- * ▸ Inputs stack vertically on small screens for easier tapping.
- * ▸ Switch to row layout from `md` breakpoint up.
- */
 const Filter: React.FC<FilterProps> = ({
   startDate,
   setStartDate,

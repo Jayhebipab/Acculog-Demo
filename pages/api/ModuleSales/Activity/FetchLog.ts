@@ -9,7 +9,7 @@ export default async function fetchAccounts(req: NextApiRequest, res: NextApiRes
 
   try {
     const db = await connectToDatabase();
-    const collection = db.collection("TaskLog"); // Make sure this collection exists
+    const collection = db.collection("TaskLog");
 
     const logs = await collection.find({}).toArray();
 

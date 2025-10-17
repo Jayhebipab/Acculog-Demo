@@ -30,7 +30,7 @@ const Pagination: React.FC<PaginationProps> = ({
           value={itemsPerPage}
           onChange={(e) => {
             setItemsPerPage(Number(e.target.value));
-            goToPage(1); // Reset to page 1 when changing items per page
+            goToPage(1);
           }}
         >
           {[5, 10, 20, 50].map((num) => (

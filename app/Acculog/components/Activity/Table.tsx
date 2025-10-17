@@ -36,7 +36,7 @@ const formatDateTime = (dateStr: string | null): string => {
   });
 };
 
-// 🔹 Helper to format ms → h m s
+// format ms → h m s
 const formatDuration = (ms: number): string => {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -51,27 +51,27 @@ const formatDuration = (ms: number): string => {
   return parts.length > 0 ? parts.join(" ") : "0s";
 };
 
-// 🔹 Compute Late / OT with formatted duration
+// Compute Late / OT 
 const computeTimeRemarks = (log: ActivityLog): string => {
   const logDate = new Date(log.date_created);
 
-  // ✅ Work start: 8:00 AM
+  // Work start: 8:00 AM
   const workStart = new Date(log.date_created);
   workStart.setHours(8, 0, 0, 0);
 
-  // ✅ Morning end: 12:59 PM
+  // Morning end: 12:59 PM
   const morningEnd = new Date(log.date_created);
   morningEnd.setHours(12, 59, 59, 999);
 
-  // ✅ Afternoon start: 1:00 PM
+  // Afternoon start: 1:00 PM
   const afternoonStart = new Date(log.date_created);
   afternoonStart.setHours(13, 0, 0, 0);
 
-  // ✅ Work end: 5:00 PM
+  // Work end: 5:00 PM
   const workEnd = new Date(log.date_created);
   workEnd.setHours(17, 0, 0, 0);
 
-  // ✅ Undertime window: 1:00 PM → 4:59 PM
+  // Undertime window: 1:00 PM → 4:59 PM
   const undertimeStart = new Date(log.date_created);
   undertimeStart.setHours(13, 0, 0, 0);
 
@@ -79,40 +79,40 @@ const computeTimeRemarks = (log: ActivityLog): string => {
   undertimeEnd.setHours(16, 59, 59, 999);
 
   if (log.Status.toLowerCase() === "login") {
-    // ✅ Late only in the morning (8:00 AM – 12:59 PM)
+    // Late only in the morning (8:00 AM – 12:59 PM)
     if (logDate > workStart && logDate <= morningEnd) {
       const lateMs = logDate.getTime() - workStart.getTime();
       return `Late by ${formatDuration(lateMs)}`;
     }
 
-    // ✅ Halfday if login is 1:00 PM or later
+    // Halfday if login is 1:00 PM or later
     if (logDate >= afternoonStart) {
       return "Halfday";
     }
 
-    // ✅ On Time if before or exactly 8:00 AM
+    // On Time if before or exactly 8:00 AM
     return "On Time";
   }
 
   if (log.Status.toLowerCase() === "logout") {
-    // ✅ Only consider undertime if between 1:00 PM and 4:59 PM
+    // Only consider undertime if between 1:00 PM and 4:59 PM
     if (logDate >= undertimeStart && logDate <= undertimeEnd) {
       const undertimeMs = workEnd.getTime() - logDate.getTime();
       return `Undertime by ${formatDuration(undertimeMs)}`;
     }
 
-    // ✅ Overtime if after 5:00 PM
+    // Overtime if after 5:00 PM
     if (logDate > workEnd) {
       const overtimeMs = logDate.getTime() - workEnd.getTime();
       return `OT +${formatDuration(overtimeMs)}`;
     }
 
-    // ✅ Exactly 5:00 PM → On Time
+    // Exactly 5:00 PM → On Time
     if (logDate.getTime() === workEnd.getTime()) {
       return "On Time";
     }
 
-    // ✅ Before 1:00 PM logout (morning or noon) → Not undertime
+    // Before 1:00 PM logout (morning or noon) → Not undertime
     if (logDate < undertimeStart) {
       return "On Time";
     }
@@ -138,6 +138,7 @@ const Table: React.FC<TableProps> = ({ data, onEdit, department }) => {
     return "bg-gray-400";
   };
 
+  // Export Function
   const exportToExcel = async () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Activity Logs");

@@ -31,7 +31,7 @@ const Filter: React.FC<FilterProps> = ({
 
   return (
     <div className="flex flex-wrap md:flex-row md:items-center gap-3 mb-4 p-3 bg-white rounded-lg shadow-sm border">
-      {/* Search input */}
+      {/* Search  */}
       <div className="relative flex-grow md:flex-grow-0">
         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
         <input

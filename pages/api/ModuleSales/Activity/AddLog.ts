@@ -1,4 +1,3 @@
-// /pages/api/ModuleSales/Activity/AddLog.ts
 import { NextApiRequest, NextApiResponse } from "next";
 import { connectToDatabase } from "@/lib/MongoDB";
 
@@ -24,7 +23,7 @@ export default async function addActivityLog(
       Remarks,
     } = req.body;
 
-    /* 🔒 Basic validation */
+    /* validation */
     if (!ReferenceID || !Email || !Type || !Status) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -32,7 +31,7 @@ export default async function addActivityLog(
     const db = await connectToDatabase();
     const activityLogsCollection = db.collection("TaskLog");
 
-    /* 📌 Build new log */
+    /* Build new log */
     const newLog: any = {
       ReferenceID,
       Email,

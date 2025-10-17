@@ -94,7 +94,8 @@ const Form: React.FC<FormProps> = ({
     const data = await res.json();
     return data.secure_url;
   };
-
+  
+  // Save Function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {

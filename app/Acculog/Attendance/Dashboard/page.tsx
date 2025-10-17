@@ -1,23 +1,28 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+// Map
 import dynamic from "next/dynamic";
+// Tutorial
 import { TourProvider, useTour } from "@reactour/tour";
+// Root
 import ParentLayout from "../../components/Layouts/ParentLayout";
 import SessionChecker from "../../components/Session/SessionChecker";
+// Chart
 import Chart from "../../components/Chart/ActivityChart";
+// Routes
 import Form from "../../components/Activity/Form";
+// Toast Notifications
 import { ToastContainer, toast } from "react-toastify";
 import { IoClose, IoAdd } from "react-icons/io5";
 import "react-toastify/dist/ReactToastify.css";
-
-// Dynamically import the map so it only renders on the client
+// Maps
 const MapCard = dynamic(() => import("../../components/Chart/MapChart"), {
   ssr: false,
   loading: () => <p className="text-center py-10">Loading map…</p>,
 });
 
-// Tutorial steps
+// Steps Tutorial
 const tutorialSteps = [
   {
     selector: ".create-activity-btn",
@@ -33,7 +38,6 @@ const tutorialSteps = [
   },
 ];
 
-// Button to trigger the tutorial
 function StartTutorialButton() {
   const { setIsOpen } = useTour();
   return (
@@ -73,8 +77,6 @@ function DashboardContent() {
   });
 
   const [posts, setPosts] = useState<any[]>([]);
-
-  // Default date: today
   const today = new Date();
   const [startDate, setStartDate] = useState(today.toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(today.toISOString().slice(0, 10));
@@ -90,6 +92,7 @@ function DashboardContent() {
     Remarks: "",
   });
 
+  // Fetch Function
   const fetchAccount = async () => {
     setLoading(true);
     try {
@@ -108,7 +111,8 @@ function DashboardContent() {
     fetchAccount();
   }, []);
 
-  // Fetch user details
+
+  // Fetch user Information
   useEffect(() => {
     const userId = new URLSearchParams(window.location.search).get("id");
     if (!userId) return;
@@ -130,26 +134,25 @@ function DashboardContent() {
           Company: data.Company ?? "",
         });
       } catch {
-        /* ignore */
       }
     })();
   }, []);
 
-  // Auto-start tutorial for first time visitors
   useEffect(() => {
     const hasVisited = localStorage.getItem("dashboard_tutorial_seen");
     if (!hasVisited) {
       setTimeout(() => {
         setIsOpen(true);
         localStorage.setItem("dashboard_tutorial_seen", "true");
-      }, 1000); // Delay to ensure elements are rendered
+      }, 1000);
     }
   }, [setIsOpen]);
 
   const endDateWithOffset = endDate
     ? new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000)
     : null;
-
+  
+  // Filter by Date Range, Search, Department
   const filteredAccounts = posts
     .filter((p) => {
       const d = p.date_created ? new Date(p.date_created) : null;
@@ -164,12 +167,18 @@ function DashboardContent() {
         p.referenceid === userDetails.ReferenceID ||
         p.ReferenceID === userDetails.ReferenceID;
 
-      // ✅ Super Admin and HR see all, others see only their own
       return inRange && (isSuperAdmin || isHR || matchID);
     })
     .sort((a, b) => +new Date(b.date_created) - +new Date(a.date_created));
+  
+  
+  // Clear Date Range
+  const clearRange = () => {
+    setStartDate("");
+    setEndDate("");
+  };
 
-
+  // Chart Function
   const chartData = Object.entries(
     filteredAccounts.reduce<Record<string, number>>((acc, p) => {
       if (!p.date_created) return acc;
@@ -181,14 +190,10 @@ function DashboardContent() {
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => (a.date < b.date ? -1 : 1));
 
-  const clearRange = () => {
-    setStartDate("");
-    setEndDate("");
-  };
-
   const handleFormChange = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-
+  
+  // Refetch
   useEffect(() => {
     if (userDetails.ReferenceID && userDetails.Email) {
       setForm((prev) => ({
@@ -198,7 +203,8 @@ function DashboardContent() {
       }));
     }
   }, [userDetails.ReferenceID, userDetails.Email]);
-
+  
+  // Animation
   const openFormWithAnimation = () => {
     setShowForm(true);
     setTimeout(() => setAnimateForm(true), 10);
@@ -213,14 +219,15 @@ function DashboardContent() {
     <SessionChecker>
       <ParentLayout>
         <div className="container mx-auto p-4">
+          {/* Tutorial Button */}
           <StartTutorialButton />
 
-          {/* Form Overlay */}
           {showForm && (
             <div
               className={`fixed inset-0 flex items-center justify-center z-[9999] p-4 bg-black/50 backdrop-blur-sm transition-all duration-500 ${animateForm ? "opacity-100 scale-100" : "opacity-0 scale-95"
                 }`}
-            >
+            > 
+              {/* Form */}
               <Form
                 formData={form}
                 onChange={handleFormChange}
@@ -236,7 +243,6 @@ function DashboardContent() {
             Dashboard
           </h1>
 
-          {/* Date Range Filter */}
           <div className="bg-white shadow-lg rounded-xl p-4 mb-6 flex flex-col sm:flex-row gap-4 sm:items-end text-black">
             <div className="flex flex-col">
               <label htmlFor="startDate" className="text-xs font-medium mb-1">
@@ -276,7 +282,6 @@ function DashboardContent() {
             </button>
           </div>
 
-          {/* Chart Section */}
           <div className="chart-section bg-white shadow-lg rounded-xl p-6 mb-6 text-black">
             <h2 className="text-lg font-semibold mb-4 text-center">
               Activities Over Time
@@ -284,8 +289,8 @@ function DashboardContent() {
             <Chart data={chartData} />
           </div>
 
-          {/* Map Section */}
           <div className="map-section animate-fadeIn">
+            {/* Maps */}
             <MapCard posts={filteredAccounts} />
           </div>
         </div>
@@ -296,6 +301,7 @@ function DashboardContent() {
   );
 }
 
+// Tutorial Function
 export default function DashboardPage() {
   return (
     <TourProvider

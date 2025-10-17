@@ -6,7 +6,6 @@ export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    // Register service worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
@@ -14,7 +13,6 @@ export default function InstallPrompt() {
         .catch((err) => console.log("❌ Service Worker registration failed:", err));
     }
 
-    // Listen for beforeinstallprompt
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);

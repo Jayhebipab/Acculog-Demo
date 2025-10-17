@@ -23,7 +23,8 @@ const GenerateCode: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [suffixCounter, setSuffixCounter] = useState(0);
-
+    
+    // Fetch User Information (ID)
     const fetchUserData = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -66,6 +67,7 @@ const GenerateCode: React.FC = () => {
         fetchUserData();
     }, [fetchUserData]);
 
+    // Autogenerate Key Combination of Firstname, Lastname and Random Numbers
     useEffect(() => {
         if (userDetails && userDetails.id && userDetails.Firstname && userDetails.Lastname) {
             const suffix = suffixCounter.toString().padStart(3, "0");
@@ -80,7 +82,9 @@ const GenerateCode: React.FC = () => {
         }
 
     }, [generatedCode]);
+    
 
+    // Generate QR Code based on Information
     const generateQRCode = async () => {
         if (!userDetails) return;
 
@@ -99,7 +103,8 @@ const GenerateCode: React.FC = () => {
             setError("Failed to generate QR code");
         }
     };
-
+    
+    // Download QR Code
     const handleDownload = () => {
         if (!qrCode) return;
         const link = document.createElement("a");
@@ -107,7 +112,8 @@ const GenerateCode: React.FC = () => {
         link.download = `${generatedCode}_QRCode.png`;
         link.click();
     };
-
+    
+    // Regenerate QR Code
     const handleRegenerate = () => {
         setSuffixCounter((prev) => (prev + 1) % 1000); 
     };

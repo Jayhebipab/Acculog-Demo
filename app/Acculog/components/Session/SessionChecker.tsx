@@ -1,12 +1,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-// Spinner
+// Icons
 import { FaSpinner } from "react-icons/fa";
 
 const SessionChecker: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
+  
+  // Check Sessions
   useEffect(() => {
     const checkSession = async () => {
       const cachedSession = localStorage.getItem("isLoggedIn");

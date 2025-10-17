@@ -1,12 +1,16 @@
 "use client";
 import React, { useEffect, useRef, useState, useMemo } from "react";
+// Map Leaflet
 import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, Tooltip, useMap,} from "react-leaflet";
+// API
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+// Routes
 import SidebarListing from "../../components/Chart/SidebarListing";
+// Icons
 import { PiMapPinAreaFill } from "react-icons/pi";
 
-/* ---------- leaflet icon fix ---------- */
+// Leaflet Icon Pin
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -17,8 +21,8 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-/* ---------- constants ---------- */
-const ORIGIN = { lat: 14.60023, lon: 121.05945 }; // main address / HQ
+// Latitude, Longitude, Distance
+const ORIGIN = { lat: 14.60023, lon: 121.05945 }; // main address / primex tower
 const WALK_KMH = 5; // average walking speed km/h
 const DRIVE_KMH = 30; // conservative city driving speed km/h
 
@@ -30,14 +34,14 @@ export interface Post {
   Status?: string;
   Email?: string;
   date_created?: string;
-  DateVisited?: string | number; // optional
+  DateVisited?: string | number;
 }
 
 export interface HistoryItem {
   Type: string;
   Status: string;
   Email: string;
-  date_created: string; // ISO string
+  date_created: string;
 }
 
 interface AggLoc {
@@ -54,14 +58,14 @@ interface Props {
   posts: Post[];
 }
 
-/* ---------- helper component to store map ref ---------- */
+// Store Map
 const SetMapRef: React.FC<{ setMap: (m: L.Map) => void }> = ({ setMap }) => {
   const m = useMap();
   useEffect(() => void setMap(m), [m]);
   return null;
 };
 
-/* ---------- utility: haversine formula for distance in km ---------- */
+// Distance Formula to KM
 const toRad = (deg: number) => (deg * Math.PI) / 180;
 const haversineKm = (
   lat1: number,
@@ -69,7 +73,7 @@ const haversineKm = (
   lat2: number,
   lon2: number
 ) => {
-  const R = 6371; // Earth's radius in km
+  const R = 6371; // radius in km
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
@@ -85,11 +89,10 @@ const fmtTime = (hours: number) => {
   return `${h > 0 ? h + "h " : ""}${m}m`;
 };
 
-/* ---------- main component ---------- */
 const MapCard: React.FC<Props> = ({ posts }) => {
   const mapRef = useRef<L.Map | null>(null);
 
-  /* ---------- aggregate visit counts by lat/lon with history ---------- */
+  // Counts Visit per Location
   const locMap = useMemo(() => {
     const map = new Map<string, AggLoc>();
 
@@ -106,7 +109,7 @@ const MapCard: React.FC<Props> = ({ posts }) => {
         Email: p.Email || "Unknown",
         date_created: p.date_created
           ? new Date(p.date_created).toISOString()
-          : "", // <-- dito 'yung pag-avoid ng default current date
+          : "",
       };
 
       if (map.has(key)) {
@@ -134,13 +137,13 @@ const MapCard: React.FC<Props> = ({ posts }) => {
 
   const locations = [...locMap.values()];
 
-  /* ---------- derive center of map ---------- */
+  // Map Center Align
   const center: [number, number] =
     locations.length > 0
       ? [locations[0].lat, locations[0].lon]
       : [ORIGIN.lat, ORIGIN.lon];
 
-  /* ---------- user location state ---------- */
+  // User Location
   const [userPos, setUserPos] = useState<{
     lat: number;
     lon: number;
@@ -148,7 +151,7 @@ const MapCard: React.FC<Props> = ({ posts }) => {
   } | null>(null);
   const [locating, setLocating] = useState(false);
 
-  /* ---------- handle locate me ---------- */
+  // Realtime Location
   const handleLocate = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
@@ -171,7 +174,7 @@ const MapCard: React.FC<Props> = ({ posts }) => {
     );
   };
 
-  /* ---------- calculate distances and estimated times ---------- */
+  // Calculate and Estimate Distance
   const locsWithDist = useMemo(() => {
     return locations.map((l) => {
       const dist = haversineKm(ORIGIN.lat, ORIGIN.lon, l.lat, l.lon);
@@ -184,13 +187,13 @@ const MapCard: React.FC<Props> = ({ posts }) => {
     });
   }, [locations]);
 
-  /* ---------- flyTo helper ---------- */
+  // Fly
   const flyTo = (lat: number, lon: number) =>
     mapRef.current?.flyTo([lat, lon], 15, { duration: 1.25 });
 
   return (
     <div className="bg-white shadow rounded-lg p-6 mt-6 flex flex-col md:flex-row gap-6">
-      {/* Map container */}
+
       <div className="relative md:w-2/3 h-96">
         <button
           onClick={handleLocate}
@@ -198,7 +201,7 @@ const MapCard: React.FC<Props> = ({ posts }) => {
         >
           <PiMapPinAreaFill size={15} /> {locating ? "Locating…" : "Locate Me"}
         </button>
-
+              {/* Map container */}
         <MapContainer
           center={center}
           zoom={13}
@@ -211,7 +214,7 @@ const MapCard: React.FC<Props> = ({ posts }) => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* Origin Marker */}
+          {/* Marker */}
           <Marker position={[ORIGIN.lat, ORIGIN.lon]}>
             <Popup>
               HQ / Origin

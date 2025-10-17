@@ -1,10 +1,10 @@
-// types/UserDetails.ts
+
 export interface UserDetails {
   UserId: string;
   ReferenceID: string;
   Manager: string;
   TSM: string;
-  TargetQuota: string; // make this a string for consistency
+  TargetQuota: string; 
   Firstname: string;
   Lastname: string;
   Email: string;

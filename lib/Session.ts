@@ -12,12 +12,10 @@ export async function getSession(req: NextApiRequest) {
   const session = cookies.session;
 
   if (!session) {
-    return null; // No session found
+    return null;
   }
 
-  // Add more logic here to verify the session if needed
-
-  return session; // Return the session data
+  return session;
 }
 
 // Function to create session
@@ -25,7 +23,7 @@ export async function createSession(res: NextApiResponse, sessionData: string) {
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 7, // 1 week
+    maxAge: 60 * 60 * 24 * 7, 
     path: "/",
   };
 

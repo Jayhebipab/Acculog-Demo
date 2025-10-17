@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+// Root
 import ParentLayout from "../../../components/Layouts/ParentLayout";
 import SessionChecker from "../../../components/Session/SessionChecker";
+// Fetch
 import UserFetcher from "../../../components/User/UserFetcher";
+// Routes
 import SessionTable from "../../../components/Logs/Table";
 import Filter from "../../../components/Logs/Filter";
 import Pagination from "../../../components/Activity/Pagination";
-
+// Toast Notifications
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -44,10 +47,10 @@ const ListofUser: React.FC = () => {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
-    // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-
+    
+    // Fetch User Information
     useEffect(() => {
         const fetchUserData = async () => {
             const params = new URLSearchParams(window.location.search);
@@ -87,6 +90,8 @@ const ListofUser: React.FC = () => {
         fetchUserData();
     }, []);
 
+
+    // Fetch Function
     const fetchAccount = async () => {
         setLoading(true);
         try {
@@ -105,14 +110,15 @@ const ListofUser: React.FC = () => {
         fetchAccount();
     }, []);
 
+    // Filter by Email
     const filteredByReference = posts.filter((post) => {
         const matchReferenceID =
             post?.email === userDetails.Email ||
             post?.Email === userDetails.Email;
         return matchReferenceID;
     });
-
-    // After filtering, apply descending sort by date_created
+    
+    // Filter By Date Range
     const filteredAccounts = filteredByReference
         .filter((post) => {
             let matchesDate = true;
@@ -129,13 +135,10 @@ const ListofUser: React.FC = () => {
         })
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-
-    // Reset page to 1 on filter/search change
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery, filterType, startDate, endDate]);
 
-    // Pagination calculations
     const totalItems = filteredAccounts.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const paginatedData = filteredAccounts.slice(
@@ -143,6 +146,7 @@ const ListofUser: React.FC = () => {
         currentPage * itemsPerPage
     );
 
+    // Pagination
     const goToPage = (page: number) => {
         if (page < 1) page = 1;
         else if (page > totalPages) page = totalPages;
@@ -158,15 +162,18 @@ const ListofUser: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-1">
                                 <div className="mb-4 p-4 bg-white shadow-md rounded-lg text-gray-900">
                                     <h2 className="text-lg font-bold mb-2">Session Logs</h2>
+                                    {/* Filter */}
                                     <Filter
                                         startDate={startDate}
                                         setStartDate={setStartDate}
                                         endDate={endDate}
                                         setEndDate={setEndDate}
                                     />
-                                    {/* Table with paginated data */}
+
+                                    {/* Table */}
                                     <SessionTable data={paginatedData} />
 
+                                    {/* Pagination */}
                                     <Pagination
                                         currentPage={currentPage}
                                         totalPages={totalPages}
@@ -180,6 +187,7 @@ const ListofUser: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Toast */}
                             <ToastContainer className="text-xs" autoClose={1000} />
                         </div>
                     )}

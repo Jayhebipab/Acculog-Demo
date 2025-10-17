@@ -58,12 +58,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isDarkMode }) => {
   const [pendingInactiveCount, setPendingInactiveCount] = useState(0);
   const [pendingDeleteCount, setPendingDeleteCount] = useState(0);
   const [agentMode, setAgentMode] = useState(false);
-
+  
+  // Get ID
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setUserId(params.get("id"));
   }, []);
 
+  // Fetch User Information
   useEffect(() => {
     const fetchUserDetails = async () => {
       if (!userId) return;
@@ -92,11 +94,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isDarkMode }) => {
     fetchUserDetails();
   }, [userId]);
 
-  const toggleSidebar = () => setCollapsed(!collapsed);
   const handleToggle = (section: string) =>
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
 
-  // 🔹 Build menu items with Timekeeping filter
+  // Menu
   const getMenuItems = (userDetails: UserDetails, userId: string | null = ""): MenuItem[] => {
     const items: MenuItem[] = [
       {

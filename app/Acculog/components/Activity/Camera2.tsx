@@ -7,8 +7,9 @@ interface CameraProps {
   onCapture: (dataUrl: string) => void;
 }
 
-const MAX_YAW_DEGREE = 15; // tolerance sa mukha na nakaharap (degree)
-const COUNTDOWN_SECONDS = 2; // <‑‑ change here
+// Face Front Default
+const MAX_YAW_DEGREE = 15; 
+const COUNTDOWN_SECONDS = 2; 
 
 const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -20,7 +21,7 @@ const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
 
-  /* --------------------------- Load face‑api models --------------------------- */
+  // Face API Model
   useEffect(() => {
     const loadModels = async () => {
       try {
@@ -35,7 +36,7 @@ const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
     loadModels();
   }, []);
 
-  /* ---------------------------- Start the webcam ----------------------------- */
+  // Webcam
   useEffect(() => {
     if (!modelsLoaded) return;
 
@@ -58,7 +59,7 @@ const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
     };
   }, [modelsLoaded]);
 
-  /* ------------------- Helpers: blink + yaw + smile check -------------------- */
+  // Check Face Blink, Smile Etc. (Verification)
   const isBlinking = (landmarks: faceapi.FaceLandmarks68) => {
     const leftEye = landmarks.getLeftEye();
     const rightEye = landmarks.getRightEye();
@@ -86,7 +87,7 @@ const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
     return (ratio - 0.5) * 60;
   };
 
-  /* ----------------------- Analyse each video frame -------------------------- */
+  // Analyze Video Frame
   const analyseFrame = useCallback(async () => {
     if (!videoRef.current || !modelsLoaded) return;
 
@@ -115,7 +116,7 @@ const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
     requestAnimationFrame(analyseFrame);
   }, [modelsLoaded]);
 
-  /* ---------- Trigger / cancel countdown based on valid face detection ------- */
+  // Countdown
   useEffect(() => {
     if (faceValid && !capturedImage) {
       if (countdown === null) setCountdown(COUNTDOWN_SECONDS);
@@ -124,7 +125,7 @@ const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
     }
   }, [faceValid, capturedImage]);
 
-  /* ------------------------ Countdown tick logic ----------------------------- */
+  // Tick
   useEffect(() => {
     if (countdown === null) return;
 
@@ -137,10 +138,10 @@ const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  /* ---------------------- Start analysing once video plays ------------------- */
+  // Analyze Video While Playing
   const handlePlay = () => requestAnimationFrame(analyseFrame);
 
-  /* ------------------------------- Capture ----------------------------------- */
+  // Capture
   const capture = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
@@ -161,7 +162,6 @@ const CameraWithFaceDetection: React.FC<CameraProps> = ({ onCapture }) => {
     }
   };
 
-  /* -------------------------------- UI -------------------------------------- */
   return (
     <div className="w-full flex flex-col items-center">
       {!capturedImage && (

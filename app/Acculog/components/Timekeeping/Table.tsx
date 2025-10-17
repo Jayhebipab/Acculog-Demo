@@ -55,7 +55,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             second: "2-digit",
         });
 
-    // 🔹 Format duration helper
+    // Format Duration
     const formatDuration = (ms: number) => {
         const hours = Math.floor(ms / (1000 * 60 * 60));
         const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
@@ -63,7 +63,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
         return `${hours}h ${minutes}m ${seconds}s`;
     };
 
-    // 🔹 Compute remarks (Late, Halfday, Undertime, OT, On Time, Invalid)
+    // Compute (Late, Halfday, Undertime, OT, On Time, Invalid)
     const computeRemarks = (log: ActivityLog) => {
         const logDate = new Date(log.date_created);
 
@@ -90,11 +90,11 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
         undertimeEnd.setHours(16, 59, 59, 999);
 
         const endOfDay = new Date(logDate);
-        endOfDay.setHours(17, 0, 0, 0); // ✅ Overtime starts 5:00 PM
+        endOfDay.setHours(17, 0, 0, 0); // Overtime starts 5:00 PM
 
         // login rules
         if (log.Status.toLowerCase() === "login") {
-            // 🔹 Invalid login (2PM to 11PM)
+            // Invalid login (2PM to 11PM)
             if (logDate >= invalidStart && logDate <= invalidEnd) {
                 const diffMs = logDate.getTime() - invalidStart.getTime();
                 return `Invalid (Needs Verification): ${formatDuration(diffMs)}`;
@@ -126,7 +126,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
         return "-";
     };
 
-    // 🔹 Export ALL as ZIP
+    // Export ALL as ZIP
     const handleExportAll = async () => {
         const zip = new JSZip();
 
@@ -138,7 +138,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             const workbook = new ExcelJS.Workbook();
             const sheet = workbook.addWorksheet("Logs");
 
-            // ✅ New header
+            // New header
             sheet.addRow([
                 "Date",
                 "Fullname",
@@ -211,7 +211,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                 ]);
             });
 
-            // 🔹 Append totals
+            // Append totals
             sheet.addRow([]);
             sheet.addRow(["", "TOTALS"]);
             if (totalLateMs > 0) sheet.addRow(["", "Total Late", formatDuration(totalLateMs)]);
@@ -220,7 +220,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             if (totalHalfday > 0) sheet.addRow(["", "Total Halfday", totalHalfday]);
             if (totalInvalidMs > 0) sheet.addRow(["", "Total Invalid", formatDuration(totalInvalidMs)]);
 
-            // 🔹 Save buffer per user Excel
+            // Save buffer per user Excel
             const buffer = await workbook.xlsx.writeBuffer();
 
             const startLabel = startDate ? startDate.replace(/-/g, "_") : "Start";
@@ -238,7 +238,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
         saveAs(content, zipFilename);
     };
 
-    // 🔹 Export SINGLE Excel
+    // Export Excel
     const handleExportExcel = async (logs: ActivityLog[], filename: string) => {
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet("Logs");
@@ -267,8 +267,6 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             const remarks = computeRemarks(log);
 
             const logDate = new Date(log.date_created);
-
-            // standard refs
             const startOfDay = new Date(logDate);
             startOfDay.setHours(8, 0, 0, 0);
 
@@ -315,7 +313,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             ]);
         });
 
-        // 🔹 Append totals
+        // Totals
         sheet.addRow([]);
         sheet.addRow(["", "TOTALS"]);
         if (totalLateMs > 0) sheet.addRow(["", "Total Late", formatDuration(totalLateMs)]);
@@ -353,10 +351,10 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
     };
 
 
-    // 🔹 Collect all logs for global filtering
+    // Collect all logs for global filtering
     const allLogs = Object.values(groupedByEmail).flat();
 
-    // 🔹 Date filter function (ILIPAT SA ITAAS BAGO GAMITIN)
+    // Date filter
     const filterByDate = (logs: ActivityLog[]) => {
         const start = startDate ? new Date(startDate + "T00:00:00") : null;
         const end = endDate ? new Date(endDate + "T23:59:59") : null;
@@ -367,7 +365,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
         });
     };
 
-    // 🔹 Apply filters
+    // Filter and Search
     const filteredData = Object.entries(groupedByEmail).filter(
         ([email, logs]) => {
             const fullname = `${logs[0].Firstname || ""} ${logs[0].Lastname || ""}`
@@ -381,7 +379,6 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
             const matchDept =
                 department === "All" || logs[0].Department === department;
 
-            // 🔹 Apply date filter (safe na kasi nasa taas na yung filterByDate)
             const filteredLogs = filterByDate(logs);
 
             return matchSearch && matchDept && filteredLogs.length > 0;
@@ -404,7 +401,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
 
     return (
         <div>
-            {/* 🔹 Filters */}
+            {/* Filters */}
             <Filters
                 search={search}
                 setSearchAction={setSearch}
@@ -420,7 +417,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                 filterByDateAction={filterByDate}
             />
 
-            {/* 🔹 Tabs */}
+            {/* Tabs */}
             <div className="flex border-b mb-4">
                 <button
                     onClick={() => setActiveTab("cards")}
@@ -442,7 +439,7 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                 </button>
             </div>
 
-            {/* 🔹 User Cards */}
+            {/* User Cards */}
             {activeTab === "cards" && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-6">
                     {filteredData.map(([email, logs]) => {
@@ -484,8 +481,6 @@ const Table: React.FC<TableProps> = ({ groupedByEmail }) => {
                     formatDuration={formatDuration}
                 />
             )}
-
-
         </div>
 
     );

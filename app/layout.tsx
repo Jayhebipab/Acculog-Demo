@@ -20,7 +20,6 @@ export const metadata: Metadata = {
     icon: "/fluxx.png",
   },
   manifest: "/manifest.json",
-  // themeColor removed
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

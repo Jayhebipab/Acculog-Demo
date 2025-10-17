@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+// Icons
 import { LuArrowBigLeft, LuArrowBigRight } from 'react-icons/lu';
 
-// 🔹 Directly declare ActivityLog dito (no external import)
 export interface ActivityLog {
     ReferenceID: string;
     Email: string;
@@ -26,13 +26,11 @@ interface CalendarModalProps {
 const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, logs, onClose }) => {
     if (!isOpen) return null;
 
-    // 🔹 State para sa month navigation
     const [currentDate, setCurrentDate] = useState(new Date());
-
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    // Group logs by date
+    // Group By Date
     const grouped = logs.reduce((acc, log) => {
         const day = new Date(log.date_created).toISOString().split("T")[0];
         if (!acc[day]) acc[day] = [];
@@ -40,15 +38,15 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, logs, onClose }) 
         return acc;
     }, {} as Record<string, ActivityLog[]>);
 
-    // Get days of month
-    const firstDay = new Date(year, month, 1).getDay(); // start weekday
+    // Get Days of Month
+    const firstDay = new Date(year, month, 1).getDay(); 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     const daysArray = Array.from({ length: firstDay + daysInMonth }, (_, i) =>
         i < firstDay ? null : i - firstDay + 1
     );
 
-    // 🔹 Month names
+    // Names of Month
     const monthNames = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"

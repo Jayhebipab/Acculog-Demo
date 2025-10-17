@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 // Toast Notifications
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// Route
+// Routes
 import Picture from "../../../components/Account/Profile/Picture";
 import Password from "../../../components/Account/Profile/Password";
 
@@ -29,6 +29,7 @@ const STATUS_OPTIONS = [
   { value: "Do not Disturb", label: "Do not Disturb", color: "bg-red-600" },
 ];
 
+// Local Storage
 const LOCAL_STORAGE_KEY = "profileFormDraft";
 
 const ProfileForm: React.FC = () => {
@@ -54,6 +55,7 @@ const ProfileForm: React.FC = () => {
   const autosaveTimer = useRef<NodeJS.Timeout | null>(null);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
+  // Fetch User Information
   useEffect(() => {
     const fetchUserData = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -78,7 +80,7 @@ const ProfileForm: React.FC = () => {
             Status: data.Status || "",
             profilePicture: data.profilePicture || "",
           };
-
+          // Save Localstorage
           const savedDraftRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
           if (savedDraftRaw) {
             const savedDraft = JSON.parse(savedDraftRaw);
@@ -109,9 +111,9 @@ const ProfileForm: React.FC = () => {
 
   useEffect(() => {
     if (loading) return;
-
+    // Timer
     if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
-
+    // Store Localstorage
     autosaveTimer.current = setTimeout(() => {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userDetails));
       toast.info("Draft auto-saved", { autoClose: 1000, pauseOnHover: false });
@@ -121,7 +123,8 @@ const ProfileForm: React.FC = () => {
       if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     };
   }, [userDetails, loading]);
-
+  
+  // Function Image Cloudinary
   const handleImageUpload = async (file: File) => {
     setUploading(true);
     const data = new FormData();
@@ -147,7 +150,8 @@ const ProfileForm: React.FC = () => {
       setUploading(false);
     }
   };
-
+  
+  // Calculation Password
   const calculatePasswordStrength = (password: string): "weak" | "medium" | "strong" | "" => {
     if (!password) return "";
     if (password.length < 4) return "weak";
@@ -155,7 +159,8 @@ const ProfileForm: React.FC = () => {
     if (password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/)) return "strong";
     return "weak";
   };
-
+  
+  // Save Function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -217,14 +222,17 @@ const ProfileForm: React.FC = () => {
       setPasswordStrength(calculatePasswordStrength(value));
     }
   };
-
+  
+  // Toggle
   const toggleStatusDropdown = () => setStatusDropdownOpen((prev) => !prev);
-
+  
+  // Filter by Status
   const handleStatusSelect = (statusValue: string) => {
     setUserDetails((prev) => ({ ...prev, Status: statusValue }));
     setStatusDropdownOpen(false);
   };
-
+  
+  // Reset
   const handleReset = () => {
     if (originalDetails) {
       setUserDetails(originalDetails);
@@ -240,6 +248,7 @@ const ProfileForm: React.FC = () => {
     <>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="md:col-span-2 flex justify-center md:justify-start">
+          {/* Picture Form */}
           <Picture
             profilePicture={userDetails.profilePicture}
             onImageUpload={handleImageUpload}
@@ -263,6 +272,7 @@ const ProfileForm: React.FC = () => {
               />
             </div>
 
+            {/* Password Form */}
             <Password
               Password={userDetails.Password || ""}
               ContactPassword={userDetails.ContactPassword || ""}
@@ -369,7 +379,8 @@ const ProfileForm: React.FC = () => {
           </form>
         </div>
       </div>
-
+      
+      {/* Toast */}
       <ToastContainer
         position="bottom-center"
         autoClose={2000}

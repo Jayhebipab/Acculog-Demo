@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId } from "mongodb";
 import bcrypt from "bcrypt";
 
-// Ensure the MONGODB_URI environment variable is defined
+// MONGODB_URI
 if (!process.env.MONGODB_URI) {
   throw new Error("Please define the MONGODB_URI environment variable");
 }
@@ -10,7 +10,7 @@ const uri = process.env.MONGODB_URI;
 let client: MongoClient | null = null;
 let clientPromise: Promise<MongoClient>;
 
-// MongoDB connection handling
+// MongoDB connection
 if (process.env.NODE_ENV === "development") {
   if (!global._mongoClient) {
     client = new MongoClient(uri);
@@ -24,10 +24,10 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect();
 }
 
-// Export the promise to be used for database connections
+// Export database connections
 export default clientPromise;
 
-// Connect to the database
+// Connection to Database
 export async function connectToDatabase() {
   const client = await clientPromise;
   return client.db("ecoshift");
@@ -93,5 +93,5 @@ export async function validateUser({ Email, Password }: { Email: string; Passwor
     return { success: false, message: "Invalid email or password" };
   }
 
-  return { success: true, user }; // Return the user object along with success status
+  return { success: true, user }; 
 }

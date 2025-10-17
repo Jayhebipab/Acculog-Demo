@@ -8,6 +8,7 @@ interface PasswordProps {
     passwordStrength: "weak" | "medium" | "strong" | "";
 }
 
+// Color
 const strengthColor = {
     weak: "bg-red-500",
     medium: "bg-yellow-400",
@@ -26,6 +27,7 @@ const Password: React.FC<PasswordProps> = ({
     const [passwordError, setPasswordError] = useState("");
     const [confirmError, setConfirmError] = useState("");
 
+    // Password Function
     useEffect(() => {
         if (Password.length > 0 && Password.length < 6) {
             setPasswordError("Password must be at least 6 characters");
