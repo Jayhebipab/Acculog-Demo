@@ -30,7 +30,7 @@ export default clientPromise;
 // Connection to Database
 export async function connectToDatabase() {
   const client = await clientPromise;
-  return client.db("ecoshift");
+  return client.db("acculog");
 }
 
 // Register a new user
